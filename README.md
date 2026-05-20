@@ -48,8 +48,8 @@
 
 | 平台 | 地址 |
 |:---:|:---|
-| **Gitee** | https://gitee.com/qhgary/zen_plugin_apps |
-| **GitHub** | https://github.com/qhgary/zen_plugin_apps |
+| **Gitee** | https://gitee.com/qhgary/zen_plugin_apps/releases/tag/v1.0.0 |
+| **GitHub** | https://github.com/qhgary/zen_plugin_apps/releases/tag/v1.0.0 |
 
 ---
 
