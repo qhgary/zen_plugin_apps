@@ -77,4 +77,4 @@
 |:---:|:---:|
 | 微信 | <img src="qrcode/wechat.png" alt="微信赞赏" width="100" /> |
 | 支付宝 | <img src="qrcode/alipay.png" alt="支付宝" width="100" /> |
-| QQ 群（入群请备注打赏金额，问题回答“是”，注意：捐赠随心随意，非产品售价）群号：38200127 | <img src="qrcode/qq.png" alt="QQ 群" width="100" /> |
+| QQ 群（入群问题回答“是”，注意：捐赠随心随意，非产品售价）群号：38200127 | <img src="qrcode/qq.png" alt="QQ 群" width="100" /> |
