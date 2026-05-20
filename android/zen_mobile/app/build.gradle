@@ -1,0 +1,356 @@
+plugins {
+    id 'com.android.application'
+}
+
+def rawStoreFile = System.getenv('ZEN_ANDROID_STORE_FILE') ?: ''
+def releaseStoreFilePath = rawStoreFile.startsWith('~')
+    ? System.getProperty('user.home') + rawStoreFile.substring(1)
+    : rawStoreFile
+def releaseStorePassword = System.getenv('ZEN_ANDROID_STORE_PASSWORD') ?: ''
+def releaseKeyAlias = System.getenv('ZEN_ANDROID_KEY_ALIAS') ?: ''
+def releaseKeyPassword = System.getenv('ZEN_ANDROID_KEY_PASSWORD') ?: ''
+def zenProfile = (findProperty('zenProfile') ?: System.getenv('ZEN_BUILD_PROFILE') ?: 'release').toString()
+def hasReleaseSigning = releaseStoreFilePath &&
+    releaseStorePassword &&
+    releaseKeyAlias &&
+    releaseKeyPassword &&
+    file(releaseStoreFilePath).exists()
+
+def uiVersion = "1.4"
+def uiVersionCode = 14
+
+android {
+    namespace = 'com.zen.mobile'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.zen.mobile'
+        minSdk 24
+        targetSdk 35
+        versionCode uiVersionCode
+        versionName "V${uiVersion}"
+
+        // 当前 gomobile AAR 只生成 arm64-v8a，APK 也只声明这一种 ABI。
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file(System.getProperty('user.home') + '/.android/debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFilePath)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            signingConfig signingConfigs.debug
+        }
+        release {
+            minifyEnabled true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // AGP 9.1 已内置 Kotlin 支持，且废弃了旧插件下的 kotlinOptions。
+    // 如果需要深入配置，应改用新的 'kotlin' DSL 块，这里由于是简单 App，采用默认配置即可。
+
+    packaging {
+        jniLibs {
+            // gomobile release output is stripped with -s -w; AGP cannot strip libgojni.so cleanly.
+            keepDebugSymbols += ['**/libgojni.so']
+        }
+        resources {
+            excludes += ['META-INF/AL2.0', 'META-INF/LGPL2.1']
+            excludes += ['go/error.java']
+        }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def releaseRequested = graph.allTasks.any { it.name.toLowerCase().contains('release') }
+    if (releaseRequested) {
+        if (!releaseStoreFilePath || releaseStoreFilePath.trim() == '') {
+            throw new GradleException("ZEN_ANDROID_STORE_FILE is empty or not set.")
+        }
+        if (!file(releaseStoreFilePath).exists()) {
+            throw new GradleException("Android keystore file not found: ${releaseStoreFilePath}")
+        }
+        if (!releaseStorePassword) {
+            throw new GradleException("ZEN_ANDROID_STORE_PASSWORD is not set.")
+        }
+        if (!releaseKeyAlias) {
+            throw new GradleException("ZEN_ANDROID_KEY_ALIAS is not set.")
+        }
+        if (!releaseKeyPassword) {
+            throw new GradleException("ZEN_ANDROID_KEY_PASSWORD is not set.")
+        }
+        // Actual keystore and password validation is done by apksigner, not here
+    }
+}
+
+// 使用 AGP 9.0+ 推荐的新 API 进行 APK 重命名 (兼容 Gradle 10)
+androidComponents {
+    onVariants(selector().all(), { variant ->
+        variant.outputs.forEach { output ->
+            def projectName = "zen_mobile_app"
+            def date = new java.text.SimpleDateFormat("yyyyMMdd").format(new Date())
+            output.outputFileName.set("${projectName}_${android.defaultConfig.versionName}_${date}.apk")
+        }
+    })
+}
+
+def repoRootDir = projectDir.toPath().resolve("../../../../").normalize().toFile()
+def repoRelativePath = { File target ->
+    repoRootDir.toPath().relativize(target.toPath()).toString().replace(File.separator, "/")
+}
+
+tasks.register("buildZenMobileAar", Exec) {
+    group = "zen"
+    def aarScriptDir = new File(repoRootDir, "src/interfaces/interface_android")
+    def aarScriptSh = new File(aarScriptDir, "build_aar.sh")
+    def aarScriptBat = new File(aarScriptDir, "build_aar.bat")
+
+    workingDir aarScriptDir
+
+    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+        commandLine "cmd", "/c", aarScriptBat.name, zenProfile
+    } else {
+        commandLine "bash", aarScriptSh.name, zenProfile
+    }
+
+    onlyIf { aarScriptSh.exists() || aarScriptBat.exists() }
+
+    doLast {
+        def aarDist = new File(repoRootDir, "applications/dist/aarch64-linux-android/${zenProfile}/zen_android_api.aar")
+        def aarLibs = file("${projectDir}/libs/zen_android_api.aar")
+        if (aarDist.exists()) {
+            if (!aarLibs.parentFile.exists()) aarLibs.parentFile.mkdirs()
+            ant.copy(file: aarDist.absolutePath, tofile: aarLibs.absolutePath, overwrite: true)
+            println "[Zen] Copied AAR to libs/: ${aarLibs.name}"
+        } else {
+            println "[Zen] WARNING: AAR not found at ${aarDist.absolutePath}, using existing libs/ AAR if present"
+        }
+    }
+}
+
+def syncedAssetEntries = [
+    "zen_mobile.html",
+    "zen_analysis_worker.js",
+    "ZenLocalService.js",
+    "StockData.js",
+    "ZenHQChartCompat.js",
+    "ZenChartDraw.js",
+    "jscommon",
+    "pkg",
+    "LICENSE",
+    "license_agreement.html",
+    "license_agreement.js",
+]
+
+def excludedJscommonEntries = [
+    "umychart.testdata",
+    "umychart.testdata.js",
+    "umychart.NetworkFilterTest.js",
+    "umychart.regressiontest.js",
+]
+
+tasks.register("syncZenAssets") {
+    group = "zen"
+    def sourceDir = new File(repoRootDir, "applications/android/web")
+    def sharedJscommonDir = new File(repoRootDir, "applications/HQChart/jscommon")
+    def sharedCompatFile = new File(repoRootDir, "applications/HQChart/ZenHQChartCompat.js")
+    def sharedChartDrawFile = new File(repoRootDir, "applications/HQChart/ZenChartDraw.js")
+    def docsDir = new File(repoRootDir, "docs")
+    def distCommonDir = new File(repoRootDir, "applications/dist/common")
+    def wasmDir = new File(repoRootDir, "applications/dist/wasm32-unknown-unknown/${zenProfile}/pkg")
+    def targetDir = new File(projectDir, "src/main/assets")
+    
+    doLast {
+        if (!targetDir.exists()) targetDir.mkdirs()
+
+        // 从 interfaces/android/web 同步前端文件
+        if (sourceDir.exists()) {
+            println "[Zen] Syncing assets from: ${repoRelativePath(sourceDir)}"
+            
+            // 直接复制前端文件，避免 broken symlink 影响 lint / asset 打包
+            ["zen_mobile.html", "zen_analysis_worker.js", "ZenLocalService.js", "StockData.js"].each { name ->
+                def target = new File(targetDir, name)
+                def source = new File(sourceDir, name)
+                if (source.exists()) {
+                    java.nio.file.Files.deleteIfExists(target.toPath())
+                    def parentDir = target.parentFile
+                    if (!parentDir.exists()) parentDir.mkdirs()
+                    ant.copy(file: source.absolutePath, tofile: target.absolutePath, overwrite: true)
+
+                    // Replace debug token in worker JS based on profile
+                    if (name == "zen_analysis_worker.js") {
+                        def isDebug = (zenProfile == "debug")
+                        def debugToken = isDebug ? "true" : "false"
+                        def content = target.text
+                        def updatedContent = content.replace("@ZEN_DEBUG@", debugToken)
+                        java.nio.file.Files.write(target.toPath(), updatedContent.getBytes())
+                        println "[Zen] Set ZEN_DEBUG=${debugToken} for ${zenProfile}"
+                    }
+                }
+            }
+
+            // 同步 License 文件
+            // license_agreement.html: 从 dist/common 取（由 src/build.sh 从 LICENSE.md + CSS 渲染生成）
+            // license_agreement.js: 从 docs 取（源文件）
+            def licenseHtmlSource = new File(distCommonDir, "license_agreement.html")
+            def licenseJsSource = new File(docsDir, "license_agreement.js")
+
+            if (licenseHtmlSource.exists()) {
+                def target = new File(targetDir, "license_agreement.html")
+                java.nio.file.Files.deleteIfExists(target.toPath())
+                println "[Zen] Syncing license_agreement.html from: ${repoRelativePath(licenseHtmlSource)}"
+                ant.copy(file: licenseHtmlSource.absolutePath, tofile: target.absolutePath, overwrite: true)
+            } else {
+                throw new RuntimeException("[Zen] Missing license_agreement.html. Please run src/build.sh html first.")
+            }
+
+            if (licenseJsSource.exists()) {
+                def target = new File(targetDir, "license_agreement.js")
+                java.nio.file.Files.deleteIfExists(target.toPath())
+                println "[Zen] Syncing license_agreement.js from: ${repoRelativePath(licenseJsSource)}"
+                ant.copy(file: licenseJsSource.absolutePath, tofile: target.absolutePath, overwrite: true)
+            }
+
+        } else {
+            throw new RuntimeException("[Zen] Frontend source directory not found: ${repoRelativePath(sourceDir)}")
+        }
+
+        if (sharedCompatFile.exists()) {
+            def targetCompat = new File(targetDir, "ZenHQChartCompat.js")
+            java.nio.file.Files.deleteIfExists(targetCompat.toPath())
+            println "[Zen] Copying shared compat from: ${repoRelativePath(sharedCompatFile)}"
+            ant.copy(file: sharedCompatFile.absolutePath, tofile: targetCompat.absolutePath, overwrite: true)
+        } else {
+            throw new RuntimeException("[Zen] Shared compat file not found: ${repoRelativePath(sharedCompatFile)}")
+        }
+
+        if (sharedChartDrawFile.exists()) {
+            def targetChartDraw = new File(targetDir, "ZenChartDraw.js")
+            java.nio.file.Files.deleteIfExists(targetChartDraw.toPath())
+            println "[Zen] Copying shared chart draw from: ${repoRelativePath(sharedChartDrawFile)}"
+            ant.copy(file: sharedChartDrawFile.absolutePath, tofile: targetChartDraw.absolutePath, overwrite: true)
+        } else {
+            throw new RuntimeException("[Zen] Shared chart draw file not found: ${repoRelativePath(sharedChartDrawFile)}")
+        }
+
+        // 复制共享 jscommon 目录（唯一来源：interfaces/zen_desktop/core/web/jscommon）
+        if (sharedJscommonDir.exists()) {
+            def targetJscommon = new File(targetDir, "jscommon")
+            if (targetJscommon.exists()) targetJscommon.deleteDir()
+            println "[Zen] Copying shared jscommon from: ${repoRelativePath(sharedJscommonDir)}"
+            ant.copy(todir: targetJscommon.absolutePath) {
+                fileset(dir: sharedJscommonDir.absolutePath)
+            }
+            excludedJscommonEntries.each { name ->
+                def excluded = new File(targetJscommon, name)
+                if (!excluded.exists() && !excluded.isDirectory()) return
+
+                println "[Zen] Excluding jscommon test asset: jscommon/${name}"
+                if (excluded.isDirectory()) excluded.deleteDir()
+                else excluded.delete()
+            }
+        } else {
+            throw new RuntimeException("[Zen] Shared jscommon directory not found: ${repoRelativePath(sharedJscommonDir)}")
+        }
+
+        // 复制 pkg 目录 (WASM)
+        if (wasmDir.exists()) {
+            def targetPkg = new File(targetDir, "pkg")
+            if (targetPkg.exists()) targetPkg.deleteDir()
+            println "[Zen] Copying pkg directory (WASM)"
+            ant.copy(todir: targetPkg.absolutePath) {
+                fileset(dir: wasmDir.absolutePath)
+            }
+        }
+        
+        println "[Zen] Assets sync completed"
+    }
+}
+
+tasks.register("cleanupZenSyncedAssets") {
+    group = "zen"
+    def targetDir = file("${projectDir}/src/main/assets")
+
+    doLast {
+        if (!targetDir.exists()) return
+
+        syncedAssetEntries.each { name ->
+            def target = new File(targetDir, name)
+            if (!target.exists() && !target.isDirectory()) return
+
+            println "[Zen] Cleaning synced asset: ${repoRelativePath(target)}"
+            if (target.isDirectory()) {
+                target.deleteDir()
+            } else {
+                target.delete()
+            }
+        }
+
+        def remaining = targetDir.listFiles()
+        if (remaining == null || remaining.length == 0) {
+            println "[Zen] Removing empty assets directory: ${repoRelativePath(targetDir)}"
+            targetDir.deleteDir()
+        }
+    }
+}
+
+afterEvaluate {
+    // preBuild 是 assemble* 的上游，确保资源同步
+    if (tasks.findByName('preBuild')) {
+        tasks.named('preBuild').configure {
+            dependsOn 'buildZenMobileAar'
+            dependsOn 'syncZenAssets'
+        }
+    }
+
+    // 显式声明 assemble* 任务的依赖（比 preBuild 更可靠，直接命中构建命令）
+    ['assemble', 'assembleDebug', 'assembleRelease', 'bundle', 'bundleDebug', 'bundleRelease'].each { taskName ->
+        if (tasks.findByName(taskName)) {
+            tasks.named(taskName).configure {
+                dependsOn 'buildZenMobileAar'
+                dependsOn 'syncZenAssets'
+            }
+        }
+    }
+
+    // 构建完成后清理临时资源（仅在 syncZenAssets 确实执行后才清理）
+    // 注意：不能依赖 finalizedBy，因为 assembleRelease 内部 task 执行顺序不确定
+    // cleanup 改为手动在所有构建任务完成后调用，而不是自动追加到 assemble*
+    tasks.configureEach { task ->
+        if (task.name == 'packageRelease' || task.name == 'packageDebug') {
+            task.finalizedBy 'cleanupZenSyncedAssets'
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: ['*-sources.jar'])
+}
