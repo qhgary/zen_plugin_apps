@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>请阅读全文同意后方能使用</title>
+    <style>
+/* Zen Plugin License Agreement - 美化样式表 */
+/* 使用方式: pandoc --css=license_agreement_style.css -o license_agreement.html LICENSE */
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+}
+
+.header {
+    background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    padding: 20px 24px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.0em;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+#license-content {
+    flex: 1;
+    margin: 24px;
+    border: none;
+    padding: 28px 32px;
+    overflow-y: auto;
+    background-color: #fff;
+    font-size: 15px;
+    line-height: 2;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    border-radius: 12px;
+}
+
+#license-content h1 {
+    font-size: 1.2em;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+#license-content h2 {
+    font-size: 1.25em;
+    color: #2c3e50;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    border-left: 5px solid #667eea;
+    padding-left: 14px;
+    line-height: 1.6;
+}
+
+#license-content h3 {
+    font-size: 1.1em;
+    color: #34495e;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+#license-content ul, #license-content ol {
+    padding-left: 28px;
+    margin: 12px 0;
+}
+
+#license-content li {
+    margin: 10px 0;
+}
+
+#license-content p {
+    margin: 14px 0;
+    text-align: justify;
+}
+
+#license-content strong {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+#license-content a {
+    color: #667eea;
+    text-decoration: none;
+    border-bottom: 1px dotted #667eea;
+}
+
+#license-content a:hover {
+    color: #764ba2;
+    border-bottom-style: solid;
+}
+
+#license-content hr {
+    border: none;
+    border-top: 2px solid #ecf0f1;
+    margin: 28px 0;
+}
+
+#license-content blockquote {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid #667eea;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+#license-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+}
+
+#license-content th, #license-content td {
+    border: 1px solid #dee2e6;
+    padding: 12px 14px;
+    text-align: left;
+}
+
+#license-content th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 500;
+}
+
+#license-content tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 24px;
+    background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+}
+
+button {
+    padding: 14px 48px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    min-width: 130px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+button.agree {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+}
+
+button.agree:hover {
+    background: linear-gradient(135deg, #219a52 0%, #27ae60 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5);
+}
+
+button.cancel {
+    background: linear-gradient(135deg, #95a5a6 0%, #bdc3c7 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+}
+
+button.cancel:hover {
+    background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#scroll-hint {
+    text-align: center;
+    color: #f39c12;
+    font-size: 14px;
+    padding: 12px;
+    background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+/* 小屏设备紧凑布局（手机竖屏 max-width 或横屏 max-height） */
+/* 目标：压缩 header 和 buttons 区域高度，最大化正文空间 */
+@media (max-width: 600px), (max-height: 500px) {
+    .header {
+        padding: 6px 10px;
+        box-shadow: none;
+    }
+    .header h1 {
+        font-size: 0.85em;
+        letter-spacing: 0;
+    }
+    #license-content {
+        margin: 6px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.6;
+        border-radius: 8px;
+        box-shadow: none;
+    }
+    #license-content h1 { font-size: 1.05em; padding-bottom: 6px; margin-bottom: 8px; }
+    #license-content h2 { font-size: 1.05em; margin-top: 12px; margin-bottom: 6px; padding-left: 8px; }
+    #license-content h3 { font-size: 0.95em; margin-top: 8px; margin-bottom: 4px; }
+    #license-content p { margin: 6px 0; }
+    #license-content ul, #license-content ol { padding-left: 18px; margin: 6px 0; }
+    #license-content li { margin: 4px 0; }
+    #license-content blockquote { padding: 8px 12px; margin: 8px 0; }
+    #license-content table { font-size: 12px; margin: 8px 0; }
+    #license-content th, #license-content td { padding: 6px 8px; }
+    #license-content hr { margin: 10px 0; }
+    .buttons {
+        padding: 8px 12px;
+        gap: 16px;
+    }
+    /* 按钮缩小约 12%：padding 14→12, 48→42; font 16→14; min-width 130→115 */
+    button {
+        padding: 12px 42px;
+        font-size: 14px;
+        min-width: 115px;
+        border-radius: 20px;
+        letter-spacing: 0;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="header"><h1>请阅读全文同意后方能使用</h1></div>
+    <div id="license-content">
+<h1 id="禅中看缠-zen-plugin-最终用户许可协议eula">禅中看缠 (Zen Plugin)
+最终用户许可协议（EULA）</h1>
+<hr />
+<h2 id="重要提示">重要提示</h2>
+<p><strong>请在使用前仔细阅读本协议全文。</strong></p>
+<p>本协议是一份具有法律约束力的文件。通过下载、安装、复制、使用本软件（或其任何部分），或点击“同意”按钮，即表示您（下称“用户”或“被许可方”）已阅读、理解并自愿接受本协议所有条款的约束。</p>
+<h3 id="年龄限制">年龄限制</h3>
+<ul>
+<li>本软件仅面向年满 18 周岁且具有完全民事行为能力的用户提供</li>
+<li>未满 18 周岁的未成年人不得下载、安装或使用本软件</li>
+</ul>
+<p><strong>如您不同意本协议的任何条款，您不得以任何方式使用本软件。</strong></p>
+<hr />
+<h1 id="第一条-产品性质理论差异与责任限制">第一条
+产品性质、理论差异与责任限制</h1>
+<h2 id="10-产品性质声明">1.0 产品性质声明</h2>
+<p>本软件属于<strong>缠论相关的技术分析与理论研究辅助工具</strong>。</p>
+<p>软件输出内容系依据作者定义的算法规则，对市场历史数据进行结构化分析后的结果展示，用于缠论学习、研究与技术分析辅助。</p>
+<p>本软件<strong>不属于</strong>：</p>
+<ul>
+<li>证券投资咨询、顾问服务</li>
+<li>证券推荐服务</li>
+<li>收益承诺产品</li>
+<li>保本产品</li>
+<li>自动化交易系统</li>
+</ul>
+<p>软件输出内容<strong>不构成</strong>：</p>
+<ul>
+<li>投资、买卖建议</li>
+<li>个性化投资方案</li>
+<li>对未来市场走势的确定性预测</li>
+<li>对收益或风险的承诺</li>
+</ul>
+<p>本软件属于技术分析与研究辅助工具。</p>
+<p>用户应结合自身经验、市场情况及独立判断进行使用。</p>
+<p>软件输出结果不应被视为对任何金融产品未来走势的确定性判断。</p>
+<hr />
+<h2 id="101-缠论理论差异声明">1.0.1 缠论理论差异声明</h2>
+<p>缠论属于具有解释空间的市场分析理论。不同研究者、课程、社区、软件实现及市场参与者，可能对分型、笔、线段、中枢、背驰、买卖点、趋势等概念存在不同理解。</p>
+<p>本软件中的分析结果，仅代表作者定义的特定算法实现方式，不代表缠论理论存在统一、唯一或官方标准答案。</p>
+<p>作者不保证软件输出结果符合用户个人理解、任何第三方教程或课程、互联网公开观点、其他软件实现结果。</p>
+<p>软件分析结果基于作者定义的算法规则自动生成。由于市场复杂性、理论解释差异、数据质量、算法边界条件及软件复杂性等因素，软件可能存在识别偏差、逻辑差异、输出遗漏、理论映射差异、软件缺陷等情形。</p>
+<p><strong>用户应自行验证分析结果。</strong></p>
+<hr />
+<h2 id="11-非导向性声明">1.1 非导向性声明</h2>
+<p>本软件仅提供基于用户输入数据的技术分析、结构识别、图形展示等功能。</p>
+<p>软件输出结果系算法自动生成，不构成任何投资建议、收益承诺或个性化投资指导。</p>
+<hr />
+<h2 id="12-责任限制在适用法律允许的最大范围内">1.2
+责任限制（在适用法律允许的最大范围内）</h2>
+<p>本软件按现状（AS IS）和按可用性（AS AVAILABLE）提供。</p>
+<p>在适用法律允许的最大范围内，授权方不承担任何形式的明示或默示担保，包括但不限于适销性、特定目的适用性、准确性、安全性、无侵权、不间断运行或无错误的担保。</p>
+<p>在适用法律允许的最大范围内，用户应自行承担因使用本软件、依赖软件输出结果、使用第三方数据源、进行投资决策、修改软件配置、使用自定义参数或第三方插件等行为产生的风险及相关后果。</p>
+<p>本软件不构成投资建议、收益承诺或确定性市场预测。</p>
+<p>在法律允许的最大范围内，作者不对用户因投资决策、第三方数据源延迟或同步差异、软件使用中断、分析结果偏差、理论理解差异、自定义配置、第三方组件问题、软件缺陷、Bug、计算资源限制、数据处理错误或性能问题导致的任何直接损失、间接损失、附带损失、特殊损失、惩罚性损失、预期收益损失、投资亏损、机会损失、数据丢失或业务中断承担赔偿责任。</p>
+<p>用户通过本软件进行的数据处理、指标分析、图形查看等任何操作，所衍生的投资决策均属于用户个人独立行为，相关盈亏、风险及法律责任均由用户自行承担。</p>
+<p>因 HQChart
+原生功能问题、第三方数据异常、用户自行修改代码、自定义配置、第三方插件或非官方修改版本导致的任何问题或损失，由用户自行承担。</p>
+<hr />
+<h2 id="13-不可抗力">1.3 不可抗力</h2>
+<p>因以下原因导致本软件无法正常使用或服务中断，授权方不承担责任：</p>
+<ul>
+<li>自然灾害（地震、洪水、台风等）</li>
+<li>政府行为（法律法规或政策变化导致服务调整）</li>
+<li>社会事件（战争、罢工、骚乱等）</li>
+<li>技术故障（网络基础设施故障、电力中断等）</li>
+<li>第三方原因（数据提供方服务中断、第三方服务商故障等）</li>
+</ul>
+<p>授权方将尽合理努力恢复正常服务，但不对服务中断的时间、范围或影响程度做任何承诺。</p>
+<hr />
+<h1 id="第二条-定义与双重许可机制">第二条 定义与双重许可机制</h1>
+<p>本项目包含不同性质的组成部分，分别适用不同的授权条款。</p>
+<hr />
+<h2 id="21-开源组件外壳部分">2.1 开源组件（“外壳”部分）</h2>
+<p>本项目开源部分包含：</p>
+<ul>
+<li>自行编写的 Desktop / Android 图形界面代码</li>
+<li>与 HQChart 的适配层代码</li>
+<li>基于 Apache License 2.0 允许范围内进行的兼容性修改代码</li>
+<li>数据接口适配层代码</li>
+<li>非核心辅助功能代码</li>
+</ul>
+<p>HQChart 原始代码及其版权仍归原作者所有。</p>
+<p>该部分采用 Apache License 2.0 协议进行开源授权。</p>
+<p>您可自由使用、修改、分发，但必须严格遵守 Apache License 2.0
+的规定，包括但不限于保留原始版权声明、修改声明及免责声明。</p>
+<hr />
+<h2 id="22-商业组件核心部分">2.2 商业组件（“核心”部分）</h2>
+<p>以下内容属于闭源商业组件：</p>
+<ul>
+<li>闭源核心分析引擎及其核心算法逻辑（tdx_zen.dll 以及 wasm
+等二进制文件）</li>
+<li>授权验证和商业化相关的功能模块</li>
+</ul>
+<p>上述内容不属于开源范围，所有权归原作者所有。</p>
+<p>相关内容受《中华人民共和国著作权法》《计算机软件保护条例》及相关国际版权条约保护。</p>
+<p>在用户支付对应费用或在合法试用期内，授权方仅授予用户在单一硬件设备上、在授权有效期内使用相关商业组件的非独占、不可转让、不可分许可的使用权。</p>
+<p>除法律明确允许的范围外，严禁对闭源商业组件进行：反向工程（含反编译、反汇编）、破解脱壳、篡改提取、绕过验证、模拟核心逻辑或任何形式的非法分发。</p>
+<hr />
+<h2 id="23-不同版本的软件组成差异说明">2.3
+不同版本的软件组成差异说明</h2>
+<p>本软件根据运行平台不同，可能包含不同的技术实现方式与第三方组件。</p>
+<h3 id="1通达信插件版dll">（1）通达信插件版（DLL）</h3>
+<p>通达信插件版主要以闭源核心算法组件形式运行，用于在通达信软件提供的插件接口环境中执行缠论分析功能。</p>
+<p>该版本：</p>
+<ul>
+<li>不包含 HQChart 图形界面组件</li>
+<li>不包含 Desktop 或 Android 图形界面外壳</li>
+<li>不包含第三方 Web 图表库</li>
+<li>不提供独立行情数据服务</li>
+</ul>
+<p>相关核心分析逻辑均为作者自主实现的算法代码。</p>
+<hr />
+<h3 id="2desktop--android-版本">（2）Desktop / Android 版本</h3>
+<p>Desktop 与 Android 版本可能包含：</p>
+<ul>
+<li>HQChart 图形界面组件</li>
+<li>第三方开源前端库</li>
+<li>第三方行情数据接口适配层</li>
+<li>本地 HTTP 服务模块</li>
+<li>闭源核心分析引擎组件</li>
+</ul>
+<p>上述版本中涉及的第三方组件，仍受对应原始许可证约束。</p>
+<p>用户应自行遵守对应第三方组件、数据源及平台服务的相关协议与法律法规。</p>
+<p>闭源核心分析引擎属于作者自主知识产权内容，不属于开源范围。</p>
+<hr />
+<h1 id="第三条-第三方开源组件hqchart合规声明">第三条
+第三方开源组件（HQChart）合规声明</h1>
+<p>本项目开源部分图形界面功能使用了开源项目 HQChart。</p>
+<ul>
+<li>HQChart 项目地址：<a
+href="https://github.com/jones2000/HQChart">https://github.com/jones2000/HQChart</a></li>
+<li>HQChart 版权归原作者 QiuYihuan（jones2000）所有</li>
+<li>开源部分按照 Apache License 2.0 的要求使用 HQChart 相关组件</li>
+</ul>
+<hr />
+<h2 id="31-用户义务">3.1 用户义务</h2>
+<p>若您分发本软件（含开源外壳部分），您有义务：</p>
+<ol type="1">
+<li>保留 HQChart 的原始版权通知、许可证文件及免责声明</li>
+<li>遵守 HQChart 对应的 Apache License 2.0 条款</li>
+<li>用户使用第三方开源组件时，应自行遵守对应组件的原始许可证要求</li>
+<li>用户在分发包含第三方开源组件的衍生作品时，应自行确保对闭源组件具有合法授权</li>
+</ol>
+<hr />
+<h2 id="32-hqchartdata-关系说明">3.2 HQChartData 关系说明</h2>
+<p>本项目开源部分本地数据功能参考了 HQChartData 项目的公开技术实现。</p>
+<ul>
+<li>HQChartData 项目地址：<a
+href="https://github.com/jones2000/HQChartData">https://github.com/jones2000/HQChartData</a></li>
+<li>HQChartData 与 HQChart 均由 jones2000 开发</li>
+<li>本软件作者与 jones2000 之间不存在任何商业合作、代理或授权关系</li>
+</ul>
+<hr />
+<h2 id="33-第三方组件许可证说明">3.3 第三方组件许可证说明</h2>
+<p>本软件包含若干第三方开源组件。该等组件仍受其原始许可证约束。</p>
+<p>若本协议与第三方开源许可证之间存在冲突，以对应第三方许可证的规定为准。</p>
+<p>本协议仅适用于本软件作者拥有知识产权的部分。</p>
+<hr />
+<h1 id="第四条-数据接口使用与法律风险豁免">第四条
+数据接口使用与法律风险豁免</h1>
+<hr />
+<h2 id="41-数据独立性">4.1 数据独立性</h2>
+<p>本软件本身不运营金融数据库服务。</p>
+<p>软件运行过程中可能根据用户配置访问第三方公开数据接口，所有输出结果均基于运行时由用户或外部程序实时输入的源数据。用户可以通过配置文件自行修改数据源接口。</p>
+<p>本软件仅提供数据处理、结构分析与图形展示功能。</p>
+<hr />
+<h2 id="42-接口示例性质">4.2 接口示例性质</h2>
+<p>本软件中可能包含用于访问第三方公开 HTTP
+接口的代码片段，仅作为技术接入示例提供，不构成任何投资建议、数据背书或收益承诺。</p>
+<hr />
+<h2 id="43-用户合规义务">4.3 用户合规义务</h2>
+<p>若您选择启用数据抓取功能、连接第三方数据接口或修改接口代码，您应自行确保相关行为符合：</p>
+<ul>
+<li>数据提供方服务协议</li>
+<li>robots.txt 规则</li>
+<li>接口频率限制</li>
+<li>《中华人民共和国网络安全法》</li>
+<li>《中华人民共和国数据安全法》</li>
+<li>《中华人民共和国个人信息保护法》</li>
+<li>其他适用法律法规</li>
+</ul>
+<p>因用户违反相关规定产生的责任，由用户依法自行承担。</p>
+<p>因第三方数据源中断、延迟、错误、格式变更或停止服务导致的数据异常、分析偏差、展示异常，本软件作者不承担责任。</p>
+<p>HQChart
+属于第三方开源项目，其功能、稳定性及适用性由原作者独立提供。本软件作者不对
+HQChart 原生功能问题承担责任。</p>
+<hr />
+<h2 id="44-第三方数据源免责">4.4 第三方数据源免责</h2>
+<p>本软件用于获取第三方行情数据的接口代码，系基于公开技术方案进行本地化实现，不构成本软件与任何数据提供方之间存在合作、代理、授权或关联关系。</p>
+<p>用户使用第三方数据源的行为属于用户个人行为。</p>
+<p>如数据提供方认为用户存在违规行为（包括但不限于高频访问、数据滥用、接口破解等），相关责任由用户自行承担。</p>
+<p>第三方数据源可能随时变更接口、限制访问或停止服务，由此导致的软件功能受限或失效，作者不承担责任。</p>
+<hr />
+<h2 id="45-自定义配置风险">4.5 自定义配置风险</h2>
+<p>本软件允许用户根据自身对缠论的理解，自主调整分析参数、识别模式及判断条件。</p>
+<p>所有基于用户自定义配置形成的分析结果、判断行为及投资决策，均属于用户个人独立行为。</p>
+<p>作者不对因用户自定义配置导致的分析偏差、误判、遗漏或损失承担责任。</p>
+<hr />
+<h1 id="第五条-商业授权试用机制与授权管理">第五条
+商业授权、试用机制与授权管理</h1>
+<hr />
+<h2 id="51-授权绑定">5.1 授权绑定</h2>
+<p>正式商业授权与单台设备的硬件机器码绑定，仅限授权设备使用。</p>
+<p>除本协议 5.5 条约定情形外，严禁共享、转让、出租、出售或模拟授权。</p>
+<hr />
+<h2 id="52-试用机制">5.2 试用机制</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>首次试用</td>
+<td>每台设备首次运行时自动激活 3 个自然日免费试用</td>
+</tr>
+</tbody>
+</table>
+<p>任何绕过或试图绕过授权验证的行为（包括但不限于环境模拟、数据篡改、时间回拨等）均将被视为违规行为，可能导致功能立即受限、分析结果失真或者无法使用。同时，此类行为可能触犯相关法律，违规者需承担相应的法律后果。</p>
+<hr />
+<h2 id="53-授权管理说明">5.3 授权管理说明</h2>
+<p>如检测到授权异常、授权数据异常或疑似破解行为，软件部分功能可能受限，且分析结果可能出现失真。</p>
+<p>如发生上述情形，用户可通过本协议末尾联系方式与作者联系。</p>
+<p>如检测到以下行为，授权方有权中止或终止授权：</p>
+<ul>
+<li>使用或传播破解版本</li>
+<li>故意绕过授权验证机制</li>
+<li>未经授权分发闭源核心组件</li>
+</ul>
+<hr />
+<h2 id="54-正式版授权与退款政策">5.4 正式版授权与退款政策</h2>
+<p>正式版授权采用按周期授权模式。</p>
+<p>License Key
+到期后，软件可能恢复至功能受限模式，用户需续费以继续使用完整功能。</p>
+<h3 id="退款政策">退款政策</h3>
+<p>由于本软件属于数字化软件授权产品，在授权激活、下载、交付或使用后，除法律法规另有强制规定外，原则上不支持无理由退款。</p>
+<p>以下情形原则上不予退款：</p>
+<ol type="1">
+<li>用户主观不希望继续使用</li>
+<li>用户更换设备</li>
+<li>因破解行为导致授权终止</li>
+<li>授权到期后要求退还历史已支付费用</li>
+</ol>
+<p>如因软件存在重大功能缺陷导致无法正常使用，双方可协商处理。</p>
+<hr />
+<h2 id="55-设备更换与授权转移">5.5 设备更换与授权转移</h2>
+<p>如用户更换设备，需要另外付费购买。有极其特殊情况的可联系作者协商处理（作者不承诺一定能免费迁移）。</p>
+<p>频繁更换设备、异常迁移行为或疑似共享授权情形，可能导致授权申请被拒绝。</p>
+<hr />
+<h1 id="第六条-个人信息保护">第六条 个人信息保护</h1>
+<p>本软件遵守《中华人民共和国个人信息保护法》等相关法律法规。</p>
+<ul>
+<li>本软件不主动收集用户个人身份信息</li>
+<li>本软件不利用用户信息进行广告推送或用户画像</li>
+<li>本软件不会主动向第三方出售用户信息</li>
+</ul>
+<p>如用户主动联系作者处理授权或技术问题，可能需要提供必要的设备信息用于授权验证。</p>
+<hr />
+<h1 id="第七条-软件安全与完整性">第七条 软件安全与完整性</h1>
+<hr />
+<h2 id="71-安全提示">7.1 安全提示</h2>
+<p>请仅从官方渠道下载本软件，并注意验证文件完整性与数字签名。</p>
+<p>请警惕任何以“破解版”“永久免费授权”等名义传播的软件版本。</p>
+<hr />
+<h2 id="72-自动更新">7.2 自动更新</h2>
+<p>本软件可能包含自动更新机制。</p>
+<p>用户可在设置中选择是否启用自动更新功能。</p>
+<p>重大更新可能通过软件内提示或官方网站进行通知。</p>
+<hr />
+<h2 id="73-第三方组件安全">7.3 第三方组件安全</h2>
+<p>本软件使用的第三方开源组件及许可证信息将在发行包中附带。</p>
+<p>作者不对第三方组件自身可能存在的漏洞承担责任，但会尽合理努力选择稳定版本。</p>
+<hr />
+<h1 id="第八条-知识产权">第八条 知识产权</h1>
+<hr />
+<h2 id="81-授权方知识产权">8.1 授权方知识产权</h2>
+<p>本软件闭源核心组件、授权系统、核心算法及相关商业标识的知识产权归授权方所有。</p>
+<p>未经授权方书面许可，任何人不得复制、传播、销售或用于商业化提供。</p>
+<hr />
+<h2 id="82-用户内容权利">8.2 用户内容权利</h2>
+<p>用户输入的数据、自定义配置及导出的分析结果，由用户自行决定如何使用。</p>
+<p>用户基于分析结果形成的任何投资决策，其风险与责任均由用户自行承担。</p>
+<hr />
+<h2 id="83-开源组件权利">8.3 开源组件权利</h2>
+<p>本软件涉及的第三方开源组件，其权利归对应原作者所有。</p>
+<hr />
+<h1 id="第九条-协议终止与违约责任">第九条 协议终止与违约责任</h1>
+<hr />
+<h2 id="91-协议终止">9.1 协议终止</h2>
+<p>如用户违反本协议关于：</p>
+<ul>
+<li>破解闭源组件</li>
+<li>非法分发核心文件</li>
+<li>恶意绕过授权机制</li>
+<li>严重违反第三方开源许可证</li>
+</ul>
+<p>授权方有权中止或终止授权。</p>
+<hr />
+<h2 id="92-协议终止后的义务">9.2 协议终止后的义务</h2>
+<p>协议终止后，用户应停止继续使用相关闭源商业组件。</p>
+<hr />
+<h2 id="93-违约责任">9.3 违约责任</h2>
+<p>授权方保留依据《中华人民共和国著作权法》《计算机软件保护条例》及其他适用法律追究相关法律责任的权利。</p>
+<hr />
+<h1 id="第十条-争议解决与法律适用">第十条 争议解决与法律适用</h1>
+<p>本协议适用中华人民共和国大陆地区法律。</p>
+<p>因本协议引发的争议，双方应优先协商解决；协商不成的，提交授权方所在地有管辖权的人民法院诉讼解决。</p>
+<hr />
+<h1 id="第十一条-其他条款">第十一条 其他条款</h1>
+<ul>
+<li>本协议构成双方关于本软件使用许可的完整协议</li>
+<li>如部分条款无效，不影响其他条款效力</li>
+<li>授权方有权根据法律法规变化或业务调整更新本协议</li>
+<li>重大协议变更将通过软件内提示、官网公告或其他合理方式通知用户</li>
+<li>授权方未行使某项权利，不构成对该权利的放弃</li>
+<li>本协议未尽事宜，依照中华人民共和国相关法律法规处理</li>
+</ul>
+<hr />
+<h1 id="第十二条-联系方式">第十二条 联系方式</h1>
+<p>电子邮件：<a href="mailto:qhgary@sina.com">qhgary@sina.com</a></p>
+<hr />
+<h1 id="用户确认">用户确认</h1>
+<p>☑ 本人已阅读并理解本协议全部内容，自愿接受其中所有条款的约束。</p>
+<p>☑
+本人明确知晓本软件仅为技术分析辅助工具，不构成任何投资建议；分析结果基于特定算法实现，本人自愿承担因自身决策产生的全部盈亏及风险。</p>
+<p>☑
+本人明确知晓软件涉及第三方组件及数据接口，且正式授权采用按周期计费模式，激活后原则上不支持无理由退款或设备授权转移。</p>
+<p>☑
+本人承诺合法使用软件，不从事违法活动，不尝试破解、篡改、绕过授权验证或传播非法版本。</p>
+<blockquote>
+<p>点击“同意”按钮、下载、安装或使用本软件，即视为您已阅读、理解并同意本协议全部条款。</p>
+</blockquote>
+<hr />
+<p><em>协议版本：v2.0</em></p>
+    </div>
+    <div id="scroll-hint">⬇ 请滚动至末尾以确认您已阅读全部内容</div>
+    <div class="buttons">
+        <button class="cancel" id="cancel-button">取消</button>
+        <button class="agree" id="agree-button" disabled>同意</button>
+    </div>
+    <script src="license_agreement.js"></script>
+</body>
+</html>
