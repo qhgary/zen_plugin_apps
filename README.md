@@ -46,10 +46,21 @@
 
 ## 下载地址
 
-| 平台 | 地址 |
+| 发布平台 | 地址 |
 |:---:|:---|
 | **Gitee** | https://gitee.com/qhgary/zen_plugin_apps/releases/tag/v1.0.0 |
 | **GitHub** | https://github.com/qhgary/zen_plugin_apps/releases/tag/v1.0.0 |
+
+### 通达信DLL插件版 （请确认好安装的通达信版本，64位通达信需要64位插件版本，32位通达信需要32位的）
+- [tdx_dll_i686-pc-windows-msvc.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/tdx_dll_i686-pc-windows-msvc.zip) (32位 Windows DLL)
+- [tdx_dll_x86_64-pc-windows-msvc.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/tdx_dll_x86_64-pc-windows-msvc.zip) (64位 Windows DLL)
+
+### 桌面版
+- [desktop_x86_64-pc-windows-msvc.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/desktop_aarch64-apple-darwin.zip) (Windows x64)
+- [desktop_aarch64-apple-darwin.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/desktop_x86_64-pc-windows-msvc.zip) (macOS ARM64)（若有MacOS下权限问题，请sudo xattr -dr com.apple.quarantine /path/to/app.app）
+
+### 安卓版
+- [apk_aarch64-linux-android.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/apk_aarch64-linux-android.zip) (ARM64 Android APK + AAR)
 
 ---
 
