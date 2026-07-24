@@ -1,0 +1,37 @@
+# Secrets - never commit
+zen_release.keystore
+.env.android
+.env.android.bat
+
+# System files
+.DS_Store
+
+# Gradle / Android intermediate outputs (regenerable)
+build/
+.gradle/
+.kotlin/
+.cxx/
+
+# Android Studio / IntelliJ IDE metadata
+.idea/
+# Build artifacts that are final packaged outputs (recursively excluded).
+# Anything else under dist/<target>/release/ is considered a closed-source
+# binary component and SHOULD be tracked.
+#
+# 已知最终成品目录（按平台）：
+#   - zen_desktop/   桌面 app 打包结果（macOS .app、Windows .exe bundle 等）— 已排除
+#   - pkg/           wasm-pack 打包产物（.wasm + .js）— 跟踪
+#   - apk/           android apk 打包结果（如果有的话，未来加在这里）
+dist/**/release/zen_desktop/
+dist/aarch64-linux-android/release/zen_mobile/*.apk
+# pkg/ (wasm-pack 产物：.wasm + .js) 已放开上传，不在此处排除
+
+# 大体积构建产物：HTML 用户手册（从源码生成）
+README.html
+
+# Desktop app 运行时产物（已生成的旧文件 + npm 依赖树）
+zen_desktop/app/manual.html
+zen_desktop/app/node_modules/
+# Android 构建期同步的 assets（由 Gradle syncZenAssets 注入，闭源组件 + wasm + jscommon + license）
+# 源码 0 个，全部为构建产物；同步任务 cleanupZenSyncedAssets 会在 package 阶段清空。
+android/zen_mobile/app/src/main/assets/

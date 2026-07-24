@@ -1,0 +1,17 @@
+{
+  "active": "tencent",
+  "sources": {
+    "tencent": {
+      "name": "腾讯财经",
+      "enabled": true
+    },
+    "akshare": {
+      "name": "AKShare",
+      "enabled": true
+    },
+    "baostock": {
+      "name": "BaoStock",
+      "enabled": true
+    }
+  }
+}

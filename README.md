@@ -1,0 +1,91 @@
+# 禅中看缠 —— 看懂走势，战胜心魔。走势终完美，买卖皆自现。
+
+> **学缠者众，得道者稀。非理论有假，乃盲修瞎练。**
+
+---
+
+### ⚡ 两万五千行 Rust 锻造，五千个股十秒尽筛
+
+缠师讲"当下"，行情不等人。此引擎纯 Rust 打造，零依赖。眨眼间，全市场结构、信号、背驰力度清清楚楚。**快，是诚意；稳，是底气。**
+
+### 📐 算法皆从原文推导，斩断"千人千缠"
+
+"千人千缠"实乃学艺不精的遁词。缠师定义如几何般严密，此器每一步皆循原文，拒绝想当然：
+
+| 模块 | 做到了什么 |
+|:---:|:---:|
+| **K 线合并** | 严格递归处理，方向不明绝不妄自合并 |
+| **笔** | 可五根独立 K 线成笔，亦可实战经验缺口成笔 |
+| **线段** | 特征序列一丝不苟，缺口单独走第二序列判断 |
+| **中枢** | 拓展、扩张、跨界全覆盖，亦可自由开关控制 |
+| **背驰力度** | 强（S）/中（M）/弱（W） 三级分判，结合 MACD 面积与零轴穿越，非粗看柱子之儿戏 |
+| **MACD 背离 + 中枢背驰** | 双重叠加验证，一眼看穿真背离还是假背驰 |
+| **三类买卖点** | 严格定义，去重防重复信号，不再一头雾水 |
+
+### 🎛 五档开关，千人千缠由你定
+
+学缠有深浅，硬套一套标准即是削足适履。五大独立开关图形化勾选：缺口成笔、拓展、扩张、跨界、缠论 K 价格。**你是什么境界，就配什么模式。**
+
+### 🎯 多级别联立选股，只打共振之靶
+
+单看一级如盲人摸象。大级别定方向，小级别找买点，共振之处方是刀落之地。**告别听消息，买卖皆有据。**
+
+### 💡 三日全功能试用，真金不怕火炼
+
+不锁功能，不限时长，全功能敞开试用三天。**准不准、快不快，用你手头的真实行情去验。**信则续，疑则弃，绝不纠缠。
+
+---
+
+**走势终完美，账户等不起。** 与其在迷雾中画符，不如让这器替你把走势描清。
+
+器物为末，心法为上；然无器在手，何以验证所学？
+
+下载，试用，让走势自己开口！
+
+---
+
+## 下载地址 (通达信插件版才有极速插件选股功能)
+
+| 发布平台 | 地址 |
+|:---:|:---|
+| **Gitee** | https://gitee.com/qhgary/zen_plugin_apps/releases |
+| **GitHub** | https://github.com/qhgary/zen_plugin_apps/releases |
+
+### 通达信DLL插件版 （请确认好安装的通达信版本，64位通达信需要64位插件版本，32位通达信需要32位的）
+- [tdx_dll_i686-pc-windows-msvc.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/tdx_dll_i686-pc-windows-msvc.zip) (32位 Windows DLL)
+- [tdx_dll_x86_64-pc-windows-msvc.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/tdx_dll_x86_64-pc-windows-msvc.zip) (64位 Windows DLL)
+
+### 桌面版
+- [desktop_x86_64-pc-windows-msvc.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/desktop_x86_64-pc-windows-msvc.zip) (Windows x64)
+- [desktop_aarch64-apple-darwin.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/desktop_aarch64-apple-darwin.zip) (macOS ARM64)（若有MacOS下权限问题，请sudo xattr -dr com.apple.quarantine +具体完整路径名，不清楚请豆包）
+
+### 安卓版（**不支持免费试用**）
+- [apk_aarch64-linux-android.zip](https://gitee.com/qhgary/zen_plugin_apps/releases/download/v1.0.0/apk_aarch64-linux-android.zip) (ARM64 Android APK + AAR)
+
+---
+
+## 软件截图
+
+### 通达信插件版
+
+<table><tr><td><img src="软件截图/dll/1.png" alt="通达信插件1" width="100%" /></td><td><img src="软件截图/dll/2.png" alt="通达信插件2" width="100%" /></td></tr><tr><td><img src="软件截图/dll/3.png" alt="通达信插件3" width="100%" /></td><td><img src="软件截图/dll/4.png" alt="通达信插件4" width="100%" /></td></tr></table>
+
+### 桌面版
+
+<table><tr><td><img src="软件截图/desktop/1.png" alt="桌面版1" width="100%" /></td><td><img src="软件截图/desktop/2.png" alt="桌面版2" width="100%" /></td></tr><tr><td colspan="2" style="text-align:center"><img src="软件截图/desktop/3.png" alt="桌面版3" width="50%" /></td></tr></table>
+
+### 安卓版
+
+<table><tr><td><img src="软件截图/apk/1.png" alt="安卓版1" width="100%" /></td><td><img src="软件截图/apk/2.png" alt="安卓版2" width="100%" /></td></tr></table>
+
+---
+
+## ☕ 送作者喝杯咖啡
+
+如果这套工具对你学习或操作有所助益，请先右上角为项目点亮颗星，如果想进一步和作者讨论共同研究缠论，欢迎投我咖啡一杯 ☕️ 加入QQ群。**随心而赠，非商品定价。**
+
+| 方式 | 二维码 |
+|:---:|:---:|
+| 微信 | <img src="qrcode/wechat.png" alt="微信打赏" width="100" /> |
+| 支付宝 | <img src="qrcode/alipay.png" alt="支付宝" width="100" /> |
+| QQ 群（入群问题回答“是”，注意：捐赠随心随意，非产品售价）群号：38200127 | <img src="qrcode/qq.png" alt="QQ 群" width="100" /> |
