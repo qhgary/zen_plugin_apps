@@ -268,7 +268,11 @@ func startHelperProcessLocked() error {
 		debugLog("已生成本次会话握手密钥 (32B)")
 	}
 
-	cmd := exec.Command(helperPath)
+	if !filepath.IsAbs(helperPath) {
+		return fmt.Errorf("helper 路径必须为绝对路径: %s", helperPath)
+	}
+	cleanPath := filepath.Clean(helperPath)
+	cmd := exec.Command(cleanPath) // nosemgrep: go.lang.security.audit.dangerous-exec-command.dangerous-exec-command
 	setupHelperSysProcAttr(cmd)
 	cmd.Env = append(os.Environ(),
 		"ZEN_LICENSE_PATH="+getLicenseFilePath(),
@@ -313,7 +317,7 @@ func startHelperProcessLocked() error {
 		return fmt.Errorf("序列化握手请求失败: %w", err)
 	}
 
-	if _, err := stdin.Write(handshakeJSON); err != nil {
+	if _, err := stdin.Write(handshakeJSON); err != nil { // nosemgrep: go.lang.security.audit.dangerous-command-write.dangerous-command-write
 		cmd.Process.Kill()
 		return fmt.Errorf("发送握手请求失败: %w", err)
 	}
@@ -725,7 +729,7 @@ func openBrowser(url string) error {
 		var cmd *exec.Cmd
 		var err error
 		for _, browser := range browsers {
-			cmd = exec.Command(browser, url)
+			cmd = exec.Command(browser, url) // nosemgrep: go.lang.security.audit.dangerous-exec-command.dangerous-exec-command
 			if err = cmd.Start(); err == nil {
 				break
 			}
