@@ -23,8 +23,8 @@ if (!JSConsole)
 //API默认地址
 var g_JSComplierResource=
 {
-    Domain : "http://127.0.0.1:8080",               //API域名
-    CacheDomain : "http://127.0.0.1:8087",          //缓存域名
+    Domain : "",               //API域名, 需通过JSCompiler_SetDomain()配置, 不能硬编码后端地址
+    CacheDomain : "",          //缓存域名, 需通过JSCompiler_SetDomain()配置, 不能硬编码后端地址
 
     DrawIcon:
     {  
