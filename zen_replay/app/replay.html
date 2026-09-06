@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>禅中看缠回测工具</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--accent:#58a6ff;--up:#26a69a;--down:#ef5350;--buy:#00e676;--sell:#ff1744}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 12px;padding-right:34px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;position:relative}
+.topbar h1{font-size:15px;font-weight:600;white-space:nowrap}
+.file-btn{background:#1f6feb;border:1px solid #1f6feb;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.file-btn:hover{background:#388bfd}
+.file-btn input{display:none}
+.info{font-size:11px;color:var(--muted)}
+.stock-sep{color:var(--border);margin:0 4px}
+.btn-close{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:24px;height:24px;line-height:22px;text-align:center;background:#CC0000;color:white;border:none;border-radius:4px;font-size:18px;font-weight:bold;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1000}
+.btn-close:hover{background:#e60000}
+.layers{display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap}
+.layers label{display:flex;align-items:center;gap:2px;cursor:pointer;padding:2px 6px;border-radius:4px;background:#21262d;border:1px solid var(--border)}
+.layers label:hover{background:#30363d}
+.layers label .lbl2{display:flex;flex-direction:column;align-items:center;line-height:1.3;text-align:center}
+.layers input{accent-color:var(--accent);margin:0}
+.layers input:disabled{opacity:.3;cursor:not-allowed}
+.layers label:has(input:disabled){opacity:.4;cursor:not-allowed}
+.layers label:has(input:disabled):hover{background:#21262d}
+.chk-group{display:flex;align-items:center;gap:0}
+.chk-group label{border-radius:0}
+.chk-group label:first-child{border-radius:4px 0 0 4px}
+.chk-group label:last-child{border-radius:0 4px 4px 0}
+.chk-group label+.chk-group label{margin-left:-1px}
+.no-border-group{display:flex;align-items:center;gap:0}
+.no-border-group label{border:none;background:none;padding:2px 4px}
+.no-border-group label:hover{background:var(--panel)}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;cursor:grab}
+.canvas-wrap.grabbing{cursor:grabbing}
+canvas{display:block;width:100%;height:100%}
+.controls{background:var(--panel);border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.btn{background:#21262d;border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;transition:.15s}
+.btn:hover{background:#30363d}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:#1f6feb;border-color:#1f6feb}
+.btn.primary:hover{background:#388bfd}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.sel{background:#21262d;border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-size:11px}
+.step-info{font-size:12px;color:var(--accent);min-width:130px;text-align:center;white-space:nowrap}
+.btn-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.mode-group{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.mode-radio{display:flex;align-items:center;cursor:pointer}
+.mode-radio input{display:none}
+.mode-radio span{padding:4px 10px;font-size:12px;background:#21262d;color:var(--muted);transition:.15s}
+.mode-radio input:checked + span{background:var(--accent);color:#fff}
+.mode-radio span:hover{background:#30363d}
+.mode-radio input:checked + span:hover{background:var(--accent)}
+.help{font-size:10px;color:var(--muted)}
+.layers .info{display:flex;align-items:center}
+.mode-label{display:flex;align-items:center;font-size:11px;color:var(--muted);white-space:nowrap}
+.mode-input{width:50px;background:#0d1117;border:1px solid var(--border);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:11px;font-family:monospace;text-align:center;outline:none}
+.mode-input:focus{border-color:var(--accent)}
+.mode-input.invalid{border-color:var(--down);color:var(--down)}
+.mode-switches{display:flex;align-items:center;gap:0}
+.msw{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:11px;padding:2px 6px;background:#21262d;color:var(--muted);border:1px solid var(--border);transition:.15s;white-space:nowrap;line-height:1.3;cursor:pointer;user-select:none}
+.msw:first-child{border-radius:4px 0 0 4px}
+.msw:last-child{border-radius:0 4px 4px 0}
+.msw:not(:first-child){border-left:none}
+.msw.on{background:rgba(88,166,255,.15);color:var(--accent);border-color:var(--accent)}
+.msw.on:not(:first-child){border-left:1px solid var(--accent)}
+.range-group{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.range-slider{position:relative;width:200px;height:22px;display:flex;align-items:center}
+.range-track{position:relative;width:100%;height:4px;background:#21262d;border-radius:2px;cursor:pointer}
+.range-fill{position:absolute;height:4px;background:rgba(88,166,255,.3);border-radius:2px;pointer-events:none}
+.range-handle{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #0d1117;cursor:grab;top:50%;transform:translate(-50%,-50%);z-index:2;box-shadow:0 0 3px rgba(0,0,0,.4)}
+.range-handle:hover{background:#79c0ff}
+.range-handle.active{background:#79c0ff;box-shadow:0 0 6px rgba(88,166,255,.6)}
+.range-handle-label{position:absolute;top:-16px;transform:translateX(-50%);font-size:9px;color:var(--muted);white-space:nowrap;pointer-events:none}
+.progress-track{flex:1;min-width:200px;height:16px;display:flex;align-items:center}
+.progress-bar{flex:1;height:5px;background:#21262d;border-radius:3px;position:relative;overflow:visible;cursor:pointer}
+.progress-range{position:absolute;top:0;height:5px;background:rgba(31,111,235,.15);border-left:1.5px solid #1f6feb;border-right:1.5px solid #1f6feb}
+.progress-fill{height:100%;background:#58a6ff;border-radius:3px;width:0%;transition:width .06s linear}
+.progress-cursor{position:absolute;top:-3px;width:2px;height:11px;background:#f0883e;border-radius:1px}
+.empty-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted)}
+.empty-overlay .big{font-size:16px;color:var(--text)}
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;display:none}
+.auth-overlay.active{display:block}
+.auth-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px 20px 8px;min-width:400px;max-width:500px;width:auto;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.auth-panel h2{font-size:14px;margin-bottom:10px;color:var(--accent)}
+.auth-panel>div{font-size:13px}
+.auth-panel .machine-code{font-family:monospace;font-size:12px;margin-bottom:6px;color:var(--text);display:flex;align-items:stretch;gap:8px;line-height:1.3}
+.auth-panel .machine-code .mc-label{flex-shrink:0;display:flex;align-items:center}
+.auth-panel .machine-code .mc-text{flex:1;min-width:0;display:flex;align-items:center;background:#0d1117;border:1px solid var(--border);padding:6px 10px;border-radius:4px;word-break:break-all}
+.auth-panel .machine-code .mc-copy-btn{font-size:10px;padding:4px 0;background:#21262d;color:#ccc;border:1px solid var(--border);border-radius:3px;cursor:pointer;flex-shrink:0;width:64px;text-align:center}
+.auth-panel .machine-code .mc-copy-btn:hover{background:#30363d}
+.auth-panel .contact-row{display:flex;align-items:stretch;gap:8px;margin-bottom:6px;line-height:1.3}
+.auth-panel .contact-row .contact-text{flex:1;min-width:0;font-size:12px;color:#fff;display:flex;align-items:center}
+.auth-panel .contact-row .copy-email-btn{font-size:10px;padding:4px 0;background:#21262d;color:#ccc;border:1px solid var(--border);border-radius:3px;cursor:pointer;flex-shrink:0;width:64px;text-align:center}
+.auth-panel .contact-row .copy-email-btn:hover{background:#30363d}
+.auth-panel .auth-status-info{font-size:12px;margin-bottom:6px;padding:2px 0;display:flex;align-items:center;justify-content:center;gap:12px;white-space:nowrap;line-height:1.3}
+.auth-panel .auth-status-info .sep{color:var(--muted)}
+.auth-panel .auth-status-info .zen-expired{color:var(--sell)}
+.auth-panel textarea{width:100%;height:112px;background:#0d1117;border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:0;resize:vertical;font-family:monospace;box-sizing:border-box;line-height:1.3}
+.auth-panel .auth-buttons{display:flex;gap:10px;justify-content:center;margin-top:8px;margin-bottom:0}
+.auth-panel .auth-btn{background:#1f6feb;border:1px solid #1f6feb;color:#fff;padding:6px 0;border-radius:6px;cursor:pointer;font-size:12px;flex:1;max-width:100px;text-align:center}
+.auth-panel .auth-btn:hover{background:#388bfd}
+.auth-panel .auth-btn.cancel-btn{background:#333;border:1px solid #555;color:#ccc}
+.auth-panel .auth-btn.cancel-btn:hover{background:#444}
+.auth-panel .trial-info{font-size:11px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.3}
+.auth-panel .error-msg:empty{display:none}.auth-panel .error-msg{color:var(--sell);font-size:11px;margin-top:2px;margin-bottom:2px;line-height:1.3}
+.trade-bar{background:var(--panel);border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.tier-btn{background:#21262d;border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;transition:.15s}
+.tier-btn:hover{background:#30363d}
+.tier-btn:active{transform:scale(.95)}
+.tier-btn:disabled{opacity:.4;cursor:not-allowed}
+.tier-btn.buy{background:#3d0d0d;border-color:#ff1744;color:#ff1744}
+.tier-btn.buy:hover{background:#4d1a1a}
+.tier-btn.buy:disabled{opacity:.4;cursor:not-allowed}
+.tier-btn.sell{background:#0d3320;border-color:#00e676;color:#00e676}
+.tier-btn.sell:hover{background:#1a4a30}
+.tier-btn.sell:disabled{opacity:.4;cursor:not-allowed}
+.trade-info{font-size:11px;color:var(--muted);white-space:nowrap}
+.trade-info b{color:var(--text);font-weight:600;font-family:monospace}
+.profit{color:#ef5350!important}
+.loss{color:#26a69a!important}
+.trade-ctx-menu{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px;display:flex;gap:4px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.trade-ctx-menu button{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:#21262d;color:var(--text);white-space:nowrap}
+.trade-ctx-menu button.del{background:#3d0d0d;border-color:var(--sell);color:var(--sell)}
+.trade-ctx-menu button.del:hover{background:#4d1a1a}
+.trade-ctx-menu button.cancel:hover{background:#30363d}
+.stroke-info{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 10px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.5);font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none}
+.stroke-info .si-label{color:var(--muted);margin-right:4px}
+.stroke-info .si-num{color:var(--accent);font-weight:bold;font-family:monospace}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <!-- 禅中看缠回测工具：需要 0.4.0 及以上版本内核 -->
+  <h1 id="app-title" style="white-space:nowrap">禅中看缠回测工具 <span id="app-version"></span></h1>
+  <span class="info" id="auth-status" style="color:#fa0">授权检查中...</span>
+  <button class="btn" id="btn-auth">授权</button>
+  <label class="file-btn">📂 加载数据<input type="file" id="file-input" accept=".txt"></label>
+  <span class="info" id="data-info" style="white-space:nowrap">未加载数据</span>
+  <span class="info" id="stock-info" style="margin-left:0"></span>
+  <span class="info" style="color:var(--border)">|</span>
+  <span class="info" id="k-info" style="color:#58a6ff;font-family:monospace;white-space:nowrap;margin-left:auto"></span>
+  <button class="btn-close" id="btn-close" title="退出">×</button>
+</div>
+
+<div class="layers" style="background:var(--panel);border-bottom:1px solid var(--border);padding:4px 12px;flex-wrap:wrap">
+  <div class="no-border-group">
+  <label title="勾选显示经包含关系合并后的缠论K线，取消则显示原始K线"><input type="checkbox" id="L-kline" checked>缠K</label>
+  <label title="勾选显示顶底分型，取消则隐藏"><input type="checkbox" id="L-fractal">分型</label>
+  <label title="勾选显示笔，取消则隐藏"><input type="checkbox" id="L-stroke" checked>笔</label>
+  <label title="勾选在笔端点显示价格标签，与可见区最高/最低点重叠的不显示。受笔开关联动：笔未勾选时此项禁用（默认关闭）"><input type="checkbox" id="L-strokeprice"><span class="lbl2"><span>笔端点</span><span>价格</span></span></label>
+  <label title="勾选显示笔级别中枢，取消则隐藏"><input type="checkbox" id="L-pivot" checked>笔中枢</label>
+  <label title="勾选显示线段，取消则隐藏"><input type="checkbox" id="L-segment" checked>线段</label>
+  <label title="勾选显示线段级别中枢，取消则隐藏"><input type="checkbox" id="L-segpivot" checked><span class="lbl2"><span>线段</span><span>中枢</span></span></label>
+  <label title="勾选显示MACD背离，取消则隐藏"><input type="checkbox" id="L-macd" checked><span class="lbl2"><span>MACD</span><span>背离</span></span></label>
+  <label title="勾选显示缠论各类买卖点，取消则隐藏"><input type="checkbox" id="L-tp" checked><span class="lbl2"><span>缠论</span><span>BS点</span></span></label>
+  <label title="勾选显示中枢背驰，取消则隐藏"><input type="checkbox" id="L-div" checked><span class="lbl2"><span>中枢</span><span>背驰</span></span></label>
+  </div>
+  <div class="btn-sep"></div>
+  <span class="mode-label" title="通达信模式值（9000+位掩码），编码下方各识别开关，修改开关自动同步">通达信MODE值：</span>
+  <input type="text" id="mode-input" class="mode-input" value="9004" maxlength="4" inputmode="numeric">
+    <span class="mode-switches" id="mode-switches">
+<span class="msw" data-bit="1" title="缺口且彻底破坏前一笔方向时，不受最少K线数限制直接成笔"><span>缺口</span><span>成笔</span></span>
+<span class="msw" data-bit="2" title="缠论第62课+第77课：顶底极点之间原始K线≥3且顶底分型不共用K线（独立K线≥4）即可成笔，不要求独立K线≥5"><span>新笔</span><span>成笔</span></span>
+<span class="msw" data-bit="4" title="后续笔回落进中枢区间时延伸本体而非新建中枢"><span>中枢</span><span>拓展</span></span>
+<span class="msw" data-bit="8" title="相邻同向中枢合并为更大中枢（自动启用拓展）"><span>中枢</span><span>扩张</span></span>
+<span class="msw" data-bit="16" title="开启后笔中枢的延伸/扩张可跨越线段边界进行（信号更少）；关闭时则只能在线段内进行（推荐关闭）"><span>允许</span><span>跨界</span></span>
+  </span>
+  <div class="btn-sep"></div>
+  <div class="no-border-group">
+  <label title="勾选显示5/10/20/34/60日均线，取消则隐藏"><input type="checkbox" id="L-ma" checked>均线</label>
+  <label title="勾选显示成交额(元)，取消则隐藏"><input type="checkbox" id="L-amount">成交额</label>
+  <label title="勾选显示成交量(手)，取消则隐藏"><input type="checkbox" id="L-vol" checked>成交量</label>
+  </div>
+  <div class="btn-sep" style="margin-left:auto"></div>
+  <span class="info" id="layer-info" style="color:#8b949e;font-family:monospace;text-align:right;line-height:1.3"></span>
+</div>
+
+<div class="canvas-wrap" id="cv-wrap">
+  <canvas id="cv"></canvas>
+  <div class="trade-ctx-menu" id="trade-ctx-menu" style="display:none">
+<button class="del" id="trade-ctx-del">删除此交易</button>
+<button class="cancel" id="trade-ctx-cancel">取消</button>
+</div>
+<div class="stroke-info" id="stroke-info" style="display:none">
+<span class="si-label" id="si-label">笔</span><span class="si-num" id="si-num">0</span>
+</div>
+<div class="empty-overlay" id="empty">
+    <div>点击「加载数据」选择 .txt 数据文件（通达信导出的 txt 数据格式）</div>
+  </div>
+  <div class="auth-overlay" id="auth-overlay"></div>
+  <div class="auth-panel" id="auth-panel" style="display:none">
+    <h2>🔐 授权验证</h2>
+    <div class="machine-code" id="machine-code"><span class="mc-label">机器码：</span><span class="mc-text">获取中...</span><button class="mc-copy-btn" id="btn-copy-mc">复制机器码</button></div>
+    <div class="auth-status-info" id="auth-status-info" style="display:none"></div>
+    <div class="contact-row"><span class="contact-text">联系缠论插件作者获取授权码: qhgary@sina.com</span><button class="copy-email-btn" id="btn-copy-email">复制邮箱</button></div>
+    <textarea id="license-input" placeholder="请粘贴授权内容..."></textarea>
+    <div class="error-msg" id="auth-error"></div>
+    <div class="auth-buttons">
+      <button class="auth-btn" id="btn-activate">关闭</button>
+    </div>
+    <div class="trial-info" id="trial-info"></div>
+  </div>
+</div>
+
+<div class="trade-bar">
+  <span class="trade-info">买入</span>
+  <button class="tier-btn buy" id="btn-buy-25" disabled title="投入总资金的 25% 买入，总仓位上限 100%">25%</button>
+  <button class="tier-btn buy" id="btn-buy-50" disabled title="投入总资金的 50% 买入，总仓位上限 100%">50%</button>
+  <button class="tier-btn buy" id="btn-buy-100" disabled title="投入总资金的 100% 买入，总仓位上限 100%">100%</button>
+  <div class="btn-sep"></div>
+  <span class="trade-info">卖出</span>
+  <button class="tier-btn sell" id="btn-sell-25" disabled title="减仓总资金的 25%，不可超过当前仓位">25%</button>
+  <button class="tier-btn sell" id="btn-sell-50" disabled title="减仓总资金的 50%，不可超过当前仓位">50%</button>
+  <button class="tier-btn sell" id="btn-sell-100" disabled title="清空全部持仓（卖出当前全部仓位）">100%</button>
+  <div class="btn-sep"></div>
+  <button class="btn" id="btn-clear" disabled title="一次性清空全部持仓，相当于按当前价格全部卖出">清仓</button>
+  <button class="btn" id="btn-reset-trade" disabled title="清空所有交易记录，仓位归零，资金恢复初始值">重置</button>
+  <div class="btn-sep"></div>
+  <span class="trade-info">投入<b id="pos-pct">0%</b></span>
+  <span class="trade-info">当前收益<b id="pos-unrealized" class="profit">+0.00%</b></span>
+  <span class="trade-info">总收益<b id="pos-total-return" class="profit">+0.00%</b></span>
+  <span class="help">（点击买卖标记可删除 | 双击笔/线段显示编号）</span>
+</div>
+
+<div class="controls">
+  <button class="btn" id="btn-first" title="跳到起点" disabled>⏮</button>
+  <button class="btn" id="btn-prev" title="上一步 (←)" disabled>◀◀</button>
+  <button class="btn primary" id="btn-play" title="播放/暂停 (空格)" disabled>▶</button>
+  <button class="btn" id="btn-next" title="下一步 (→)" disabled>▶▶</button>
+  <button class="btn" id="btn-last" title="跳到终点" disabled>⏭</button>
+  <div class="step-info"><span id="cur-step">0</span>/<span id="total-steps">0</span> (K0为起点)</div>
+  <div class="btn-sep"></div>
+  <div class="mode-group">
+    <label class="mode-radio" title="逐根推送K线增量识别，注重局部最优和当下性，已确认将不可被更改，适合回测"><input type="radio" name="analyze-mode" value="streaming" checked><span>逐根推送</span></label>
+    <label class="mode-radio" title="一次性读取全部K线统一分析，注重全局最优"><input type="radio" name="analyze-mode" value="batch"><span>整体推送</span></label>
+  </div>
+  <div class="btn-sep"></div>
+  <div class="range-group">
+    <span>数据时间范围</span>
+    <div class="range-slider" id="range-slider">
+      <div class="range-track"></div>
+      <div class="range-fill" id="range-fill"></div>
+      <div class="range-handle" id="handle-start" style="left:0%"><span class="range-handle-label" id="label-start">--</span></div>
+      <div class="range-handle" id="handle-end" style="left:100%"><span class="range-handle-label" id="label-end">--</span></div>
+    </div>
+  </div>
+  <div class="progress-track">
+    <div class="progress-bar" id="pbar">
+      <div class="progress-range" id="prange"></div>
+      <div class="progress-fill" id="pfill"></div>
+      <div class="progress-cursor" id="pcursor"></div>
+    </div>
+  </div>
+  <select class="sel" id="speed-preset">
+    <option value="0.5">0.5x</option>
+    <option value="1" selected>1x</option>
+    <option value="2">2x</option>
+    <option value="4">4x</option>
+  </select>
+  <div class="btn-sep"></div>
+  <button class="btn" id="btn-zoom-out" title="缩小K线 (一屏显示更多)">−</button>
+  <span class="info" id="zoom-level" style="min-width:28px;text-align:center;font-family:monospace">5</span>
+  <button class="btn" id="btn-zoom-in" title="放大K线">+</button>
+  <span class="help">空格=播放 ←→=步进 拖拽=平移 ↑↓/+-=缩放</span>
+</div>
+
+<script src="zen_error_codes.js"></script>
+<script>
+// ====== 版本号（各端独立维护）======
+var ZEN_REPLAY_VERSION = "1.3";
+// 设置初始版本号显示（内核版本由 WASM 返回后追加）
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('app-version');
+    if (el) el.textContent = 'V' + ZEN_REPLAY_VERSION;
+});
+// ====== 全局状态 ======
+let wasmReady = false;
+let authValid = false;
+let backendDown = false;  // 标记后台服务器是否已退出（网络不可达）
+let _zenAuthErrorCode = 0; // 当前错误码
+let _zenAuthPanelDismissed = false; // 用户手动关闭授权面板后设为 true，定时检查不再自动弹出
+let _zenCheckTimer = null;      // 10 秒定时授权检查定时器
+
+// ====== 安全 Token ======
+// 从 URL 查询参数中提取 serverToken，用于 API 认证
+// 防止本机其他进程或恶意网站未授权调用 API
+const _serverToken = new URLSearchParams(window.location.search).get('token') || '';
+function _apiUrl(path) {
+  return path + (path.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(_serverToken);
+}
+function _apiHeaders(extra) {
+  return Object.assign({ 'X-Zen-Token': _serverToken }, extra || {});
+}
+
+// ====== Badge 辅助函数（_EC / _zenErrorBadgeText / _zenIsAuthError / _zenErrMsg 已由 zen_error_codes.js 提供）======
+// 更新 auth-status badge 显示
+function _setAuthBadge(ec, customText) {
+  _zenAuthErrorCode = Number(ec) || 0;
+  const el = document.getElementById('auth-status');
+  if (!el) return;
+  el.textContent = customText || _zenErrorBadgeText(ec);
+  el.style.color = '#ef5350';
+}
+// 自动弹出授权面板（模拟点击授权按钮）
+// 如果用户已手动关闭面板（_zenAuthPanelDismissed=true），则不再自动弹出
+function _zenAutoShowAuthPanel(machineCode, authResult) {
+  if (_zenAuthPanelDismissed) return;
+  const panel = document.getElementById('auth-panel');
+  if (!panel || panel.style.display === 'block') return;
+  // 优先直接显示面板并展示当前授权错误信息，避免走 btn-auth 的异步流程只回显旧授权
+  showAuthPanel(machineCode || '', null, authResult || null);
+  // 异步获取机器码和已保存的授权码，如果有授权码则自动触发一次解码以显示 auth-error
+  fetch(_apiUrl('/api/auth/status'), { headers: _apiHeaders() })
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.machine_code) {
+        var mcT = document.querySelector('#machine-code .mc-text');
+        if (mcT) mcT.textContent = data.machine_code;
+        var cpBtn = document.getElementById('btn-copy-mc');
+        if (cpBtn) cpBtn.dataset.machineCode = data.machine_code;
+      }
+      // 回显已有授权码并触发解码，让 auth-error 显示验证结果
+      if (data && data.license_key) {
+        document.getElementById('license-input').value = _smartExtractKey(data.license_key);
+        _decodeLicenseKey(false);
+      }
+    })
+    .catch(() => {});
+}
+// 10 秒定时授权检查（与 desktop/apk 一致）
+// 定时检查授权状态，授权失败时更新 badge 并按需弹面板
+// 如果用户已手动关闭面板，则不再自动弹出
+function startAuthCheckTimer() {
+  if (_zenCheckTimer) clearInterval(_zenCheckTimer);
+  _zenCheckTimer = setInterval(async () => {
+    if (!wasmReady || !wasmModule) return;
+    try {
+      const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const resp = await fetch(_apiUrl('/api/auth/session'), {
+        method: 'POST',
+        headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ nonce, app_id: 'tdx_zen', platform: 'replay' })
+      });
+      const data = await resp.json();
+      if (data && data.success && data.auth_result && data.auth_result.valid) {
+        // 授权有效（可能用户在外部更新了 license）
+        if (!authValid) {
+          authValid = true;
+          _zenAuthPanelDismissed = false;
+          hideAuthPanel();
+          if (wasmModule && data.attestation) {
+            wasmModule.init_auth_attestation(data.attestation, nonce, 'tdx_zen', 'replay');
+            enableControls();
+            startAuthRefreshTimer();
+          }
+          formatAuthStatus(data.auth_result);
+        }
+      } else {
+        // 授权不通过
+        const ec = (data && data.auth_result) ? (data.auth_result.error_code || 0) : 0;
+        if (authValid) {
+          authValid = false;
+          disablePlaybackControls();
+        }
+        _setAuthBadge(ec);
+        if (_zenIsAuthError(ec)) {
+          _zenAutoShowAuthPanel(data && data.machine_code, data && data.auth_result);
+        }
+      }
+      backendDown = false;
+    } catch (e) {
+      // 网络错误：后台服务器可能已退出或网络不可用
+      if (authValid) {
+        authValid = false;
+        disablePlaybackControls();
+      }
+      backendDown = true;
+      _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+    }
+  }, 10000);
+}
+// 从可能包含格式化边框/标题的文本中提取纯授权码（与 Rust smart_extract_key 逻辑一致）
+// 授权文件中可能存储的是带 === 边框的完整文本，这里只提取 Base64 那一行
+function _smartExtractKey(input) {
+  if (!input) return '';
+  var lines = input.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+  if (lines.length === 0) return '';
+  var bestLine = '';
+  var maxLen = 0;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    // 跳过装饰行（主要是 = - * # 字符）
+    var decorCount = (line.match(/[=\-*#]/g) || []).length;
+    if (decorCount > line.length / 2) continue;
+    // 跳过元数据行
+    var lower = line.toLowerCase();
+    if (lower.indexOf('key for') >= 0 || lower.indexOf('device:') >= 0 ||
+        lower.indexOf('features:') >= 0 || lower.indexOf('valid:') >= 0 ||
+        lower.indexOf('expires:') >= 0 || lower.indexOf('type:') >= 0 ||
+        lower.indexOf('user:') >= 0) continue;
+    // 选最长的有效行
+    if (line.length > maxLen) {
+      maxLen = line.length;
+      bestLine = line;
+    }
+  }
+  // 去除所有空白字符
+  return bestLine.replace(/\s/g, '');
+}
+let allKlines = [];     // 全部 K 线原始数据 [{d,o,h,l,c}]
+let snapshots = [];     // 逐根推送后的快照数组
+let rangeStart = 0, rangeEnd = 0, currentStep = 0;
+let playing = false, playTimer = null, speed = 5;
+let panOffset = 0;
+let currentMode = 'streaming';
+let batchFullSnap = null;
+let batchKlineCount = 0;
+let tdxMode = 9004;  // 通达信 MODE 值（9000-9031），控制缺口/新笔/拓展/扩张/跨界
+
+let KW = 5;       // K-line width (spacing). Default smaller for more bars per screen.
+let BAR_W = 5;    // K-line body width, derived from KW (≈2/3 of KW).
+const PAD_L = 56, PAD_R = 8, PAD_T = 8;
+let PAD_B = 80; // 数据含成交量时 80（底部量能区26px，辅助显示不喧宾夺主），不含时收缩为 28
+
+const canvas = document.getElementById('cv');
+const ctx = canvas.getContext('2d');
+const cvWrap = document.getElementById('cv-wrap');
+const dpr = window.devicePixelRatio || 1;
+
+// 图层开关
+const layers = {};
+['ma','amount','vol','kline','fractal','stroke','strokeprice','segment','pivot','segpivot','tp','div','macd'].forEach(k => {
+  const el = document.getElementById('L-' + k);
+  if (!el) { layers[k] = false; return; }
+  layers[k] = el.checked;
+  el.addEventListener('change', () => {
+    layers[k] = el.checked;
+    // amount 与 vol 互斥：勾选一个自动取消另一个
+    if (k === 'amount' && el.checked) {
+      const volEl = document.getElementById('L-vol');
+      if (volEl && volEl.checked) { volEl.checked = false; layers.vol = false; }
+    } else if (k === 'vol' && el.checked) {
+      const amtEl = document.getElementById('L-amount');
+      if (amtEl && amtEl.checked) { amtEl.checked = false; layers.amount = false; }
+    }
+    // 笔联动笔端点价格：笔取消时 disable 笔端点价格（不清空状态），笔勾选时恢复
+    if (k === 'stroke') {
+      const spEl = document.getElementById('L-strokeprice');
+      if (spEl) {
+        spEl.disabled = !el.checked;
+        if (el.checked) {
+          // 恢复笔端点价格到保存的状态
+          spEl.checked = layers.strokeprice !== undefined ? layers.strokeprice : spEl.checked;
+        }
+      }
+    }
+    // 量能/成交额开关影响 PAD_B，需要重算 canvas 尺寸
+    if (k === 'amount' || k === 'vol') {
+      const hasVolData = allKlines.some(kk => kk.v > 0);
+      const hasAmtData = allKlines.some(kk => kk.a > 0);
+      const showVol = (layers.vol && hasVolData) || (layers.amount && hasAmtData);
+      PAD_B = showVol ? 80 : 28;
+      resizeCanvas();
+    } else {
+      draw();
+    }
+    _saveZenConfig();
+  });
+});
+
+// ====== MODE 输入框 ======
+const modeInput = document.getElementById('mode-input');
+// 根据 tdxMode 更新开关指示器
+function updateModeSwitches(mode) {
+  const bits = (mode || tdxMode) - 9000;
+  document.querySelectorAll('#mode-switches .msw').forEach(el => {
+    const bit = parseInt(el.dataset.bit);
+    if (bits & bit) el.classList.add('on');
+    else el.classList.remove('on');
+  });
+}
+// 输入时：只允许数字，最多4位，填满4位且有效时自动应用
+modeInput.addEventListener('input', async () => {
+  // 过滤非数字字符，截断到4位
+  modeInput.value = modeInput.value.replace(/\D/g, '').slice(0, 4);
+  const v = modeInput.value;
+  if (v.length < 4) {
+    // 不足4位：不应用，移除错误样式
+    modeInput.classList.remove('invalid');
+    return;
+  }
+  // 满4位：校验范围
+  const n = parseInt(v);
+  if (n < 9000 || n > 9031) {
+    modeInput.classList.add('invalid');
+    return;
+  }
+  modeInput.classList.remove('invalid');
+  // 有效且与当前值不同：自动应用
+    if (n !== tdxMode) {
+    tdxMode = n;
+    updateModeSwitches();
+    _saveZenConfig();
+    if (allKlines.length > 0) {
+      // 保持当前位置不变，只更新分析结果
+      const savedStep = currentStep;
+      const savedPan = panOffset;
+      await analyzeRange();
+      currentStep = Math.min(savedStep, getTotalSteps());
+      panOffset = savedPan;
+      clampPan();
+      draw();
+      updateStats();
+    }
+  }
+});
+// 失焦时：如果不足4位或无效，回退到上次有效值
+modeInput.addEventListener('blur', () => {
+  const v = modeInput.value;
+  const n = parseInt(v);
+  if (v.length < 4 || n < 9000 || n > 9031) {
+    modeInput.value = String(tdxMode);
+    modeInput.classList.remove('invalid');
+    updateModeSwitches();
+  }
+});
+// 阻止非数字按键（允许退格、删除、方向键等控制键）
+modeInput.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey) return; // 允许复制粘贴等快捷键
+  if (e.key.length === 1 && !/\d/.test(e.key)) e.preventDefault();
+});
+// 初始化开关指示器
+updateModeSwitches();
+// 点击开关按钮：切换对应位，与 MODE 值联动
+document.querySelectorAll('#mode-switches .msw').forEach(el => {
+  el.addEventListener('click', async () => {
+    const bit = parseInt(el.dataset.bit);
+    let newMode = 9000 + ((tdxMode - 9000) ^ bit);
+
+    // 中枢扩张(bit3=8)联动逻辑（与 desktop/apk 前端一致）：
+    // - 打开扩张时，如果拓展(bit2=4)未开，自动打开拓展
+    // - 关闭拓展时，自动关闭扩张（扩张依赖拓展）
+    // - 打开扩张时拓展已开，不影响拓展状态
+    // - 关闭扩张不影响拓展状态
+    const BIT_MERGE = 4, BIT_EXPAND = 8;
+    const oldBits = tdxMode - 9000;
+    const newBits = newMode - 9000;
+    // 拓展从开→关：自动关闭扩张
+    if ((oldBits & BIT_MERGE) && !(newBits & BIT_MERGE) && (newBits & BIT_EXPAND)) {
+      newMode = 9000 + (newBits & ~BIT_EXPAND);
+    }
+    // 扩张从关→开：自动打开拓展
+    if (!(oldBits & BIT_EXPAND) && (newBits & BIT_EXPAND) && !(newBits & BIT_MERGE)) {
+      newMode = 9000 + (newBits | BIT_MERGE);
+    }
+
+    tdxMode = newMode;
+    modeInput.value = String(newMode);
+    modeInput.classList.remove('invalid');
+    updateModeSwitches();
+    _saveZenConfig();
+    if (allKlines.length > 0) {
+      // 保持当前位置不变，只更新分析结果
+      const savedStep = currentStep;
+      const savedPan = panOffset;
+      await analyzeRange();
+      currentStep = Math.min(savedStep, getTotalSteps());
+      panOffset = savedPan;
+      clampPan();
+      draw();
+      updateStats();
+    }
+  });
+});
+
+// ====== 模式辅助函数 ======
+function getTotalSteps() {
+  if (currentMode === 'batch') return Math.max(0, batchKlineCount - 1);
+  return Math.max(0, snapshots.length - 1);
+}
+function hasData() {
+  if (currentMode === 'batch') return batchFullSnap !== null;
+  return snapshots.length > 0;
+}
+function getCurrentSnapshot() {
+if (currentMode === 'batch' && batchFullSnap) {
+// 整体推送模式：直接返回完整分析结果，不做逐步截取
+return batchFullSnap;
+}
+return snapshots[currentStep];
+}
+function resizeCanvas() {
+  canvas.width = cvWrap.clientWidth * dpr;
+  canvas.height = cvWrap.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (allKlines.length > 0) draw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ====== SSE 长连接存活检测 ======
+// 通过 EventSource 建立 SSE 长连接，后端通过连接断开感知页面关闭。
+// 不受浏览器标签页节流影响——TCP 连接由 OS 维持，不依赖 JS 定时器。
+// 同时检测后端是否已退出：EventSource onerror 触发时弹窗提示
+// onerror 可能原因：后端进程退出（连接被拒绝）或网络不可用（连接超时）
+// 通过 navigator.onLine 区分：离线=网络不可用，在线=后台已退出
+(function() {
+  var _aliveES = new EventSource(_apiUrl('/alive'));
+  var _sseError = false;
+  var _sseErrorTimer = null;
+  _aliveES.onerror = function() {
+    if (_sseError) return;
+    // SSE 断开可能是浏览器后台节流导致，延迟弹窗，给 EventSource 自动重连的机会
+    _sseErrorTimer = setTimeout(function() {
+      // 3 秒内 SSE 未重连，先探测 Go server 是否还活着（127.0.0.1 本地，不存在网络问题）
+      fetch(_apiUrl('/api/health'), { method: 'HEAD' }).then(function(resp) {
+        if (resp.ok) {
+          // Go server 还活着，SSE 只是临时断开，不弹窗，继续等待重连
+          _sseError = false;
+          return;
+        }
+        throw new Error('health check failed');
+      }).catch(function() {
+        // Go server 进程已退出
+        _sseError = true;
+        authValid = false;
+        disablePlaybackControls();
+        _setAuthBadge(_EC.BACKEND_DOWN);
+        _showErrorDialog('', _EC.BACKEND_DOWN);
+      });
+    }, 3000); // 3 秒后仍未重连才探测
+  };
+  _aliveES.onopen = function() {
+    // 重连成功，取消待弹窗和错误状态
+    if (_sseErrorTimer) { clearTimeout(_sseErrorTimer); _sseErrorTimer = null; }
+    _sseError = false;
+  };
+  // 监听网络状态变化：网络恢复后，如果弹窗显示的是"网络不可用"，切换为"后台已退出"
+  window.addEventListener('online', function() {
+    if (_sseError) {
+      var oldModal = document.getElementById('ZenNoticeModal');
+      if (oldModal) oldModal.remove();
+      _setAuthBadge(_EC.BACKEND_DOWN); // 网络恢复后仍连不上 → 后台已退出
+      _showErrorDialog('', _EC.BACKEND_DOWN);
+    }
+  });
+  // 监听网络断开：如果 SSE 还没报错，主动更新状态
+  window.addEventListener('offline', function() {
+    if (!_sseError) {
+      _sseError = true;
+      authValid = false;
+      disablePlaybackControls();
+      _setAuthBadge(_EC.NETWORK_UNAVAILABLE); // 网络不可用
+      var ver = (document.getElementById('app-version') || {}).textContent || '';
+      _showErrorDialog(ver, _EC.NETWORK_UNAVAILABLE);
+    }
+  });
+  window.addEventListener('beforeunload', function() {
+    _aliveES.close();
+  });
+})();
+
+// ====== 统一弹窗组件（与 Desktop 版样式一致）======
+// 根据错误码动态显示对应的标题和消息
+function _showErrorDialog(versionStr, errorCode) {
+  var old = document.getElementById('ZenNoticeModal');
+  if (old) old.remove();
+  var ec = Number(errorCode) || 6;
+  var titleSuffix, msgText, bgColor;
+  if (ec === 8) {
+    titleSuffix = '网络不可用';
+    msgText = '当前网络不可用，无法连接到后台服务。\n请检查网络连接后重试。';
+    bgColor = '#ff9800';
+  } else {
+    titleSuffix = '后台程序已退出';
+    msgText = '后台程序已退出，无法继续使用，请重新启动程序。';
+    bgColor = '#f44336';
+  }
+  var title = '禅中看缠回测工具 - ' + titleSuffix;
+  var msg = msgText;
+  var modal = document.createElement('div');
+  modal.id = 'ZenNoticeModal';
+  modal.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);animation:ZenFadeIn 0.3s ease-out;';
+  var content = document.createElement('div');
+  content.style = 'background:#fff;width:90%;max-width:400px;max-height:80vh;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;animation:ZenSlideUp 0.3s ease-out;';
+  content.innerHTML =
+    '<div style="background:' + bgColor + ';padding:14px;color:#fff;text-align:center;font-size:16px;font-weight:bold;">' + title + '</div>' +
+    '<div style="padding:20px;color:#333;line-height:1.5;text-align:left;font-size:13px;max-height:50vh;overflow-y:auto;word-wrap:break-word;">' + msg.replace(/\n/g, '<br>') + '</div>' +
+    '<div style="padding:12px;text-align:center;border-top:1px solid #eee;"><button id="ZenModalClose" style="background:' + bgColor + ';color:#fff;border:none;padding:8px 28px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;transition:opacity 0.2s;">知道了</button></div>';
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  document.getElementById('ZenModalClose').onclick = function() {
+    modal.style.opacity = '0';
+    setTimeout(function() { modal.remove(); }, 200);
+  };
+  var style = document.createElement('style');
+  style.innerHTML = '@keyframes ZenFadeIn{from{opacity:0}to{opacity:1}}@keyframes ZenSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}#ZenModalClose:hover{opacity:0.9}';
+  document.head.appendChild(style);
+}
+
+// ====== WASM 加载 ======
+let wasmModule = null;
+
+async function initWasm() {
+  try {
+    const wasm = await import('./pkg/tdx_zen.js');
+    await wasm.default();
+    wasmModule = wasm;
+    wasmReady = true;
+    // 显示内核版本号（与桌面版格式一致）
+    try {
+      const ver = wasm.get_plugin_version();
+      console.log('[replay] 内核版本:', ver);
+      var verElem = document.getElementById('app-version');
+      if (verElem) verElem.textContent = verElem.textContent + ' (' + ver + ')';
+    } catch (e) { /* 忽略版本获取失败 */ }
+    initAuth();
+  } catch (err) {
+    console.error('[replay] WASM load failed:', err);
+    document.getElementById('empty').innerHTML = '<div class="big">❌ WASM 加载失败</div><div>' + err.message + '</div>';
+  }
+}
+
+// 页面加载时初始化股票信息显示为空（清除状态）
+window.addEventListener('load', () => {
+  updateStockInfoDisplay({});
+});
+
+// ====== 主动令牌刷新 ======
+// WASM 内部令牌和 attestation 均有 60 秒 TTL，
+// 用户暂停超过 60 秒后重新操作会导致令牌过期。
+// 此定时器每 50 秒主动刷新 attestation，确保令牌不过期。
+let authRefreshTimer = null;
+function startAuthRefreshTimer() {
+  if (authRefreshTimer) clearInterval(authRefreshTimer);
+  authRefreshTimer = setInterval(async () => {
+    if (!wasmReady || !wasmModule || !authValid) return;
+    try {
+      const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const resp = await fetch(_apiUrl('/api/auth/session'), {
+        method: 'POST',
+        headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ nonce, app_id: 'tdx_zen', platform: 'replay' })
+      });
+      const data = await resp.json();
+      if (data && data.success && data.attestation) {
+        const ar = wasmModule.init_auth_attestation(data.attestation, nonce, 'tdx_zen', 'replay');
+        if (!ar || !ar.valid) {
+          console.warn('[replay] 主动刷新令牌：attestation 验证失败', ar);
+        }
+      }
+      // 请求成功，后台存活
+      backendDown = false;
+      // 如果之前是后台退出状态，恢复授权状态显示
+      if (_zenAuthErrorCode === _EC.BACKEND_DOWN) {
+        _zenAuthErrorCode = _EC.NONE;
+        const el = document.getElementById('auth-status');
+        if (el && authValid) {
+          el.textContent = '授权有效';
+          el.style.color = '#26a69a';
+        }
+      }
+    } catch (e) {
+      // 网络错误：后台服务器可能已退出或网络不可用
+      backendDown = true;
+      console.warn('[replay] 主动刷新令牌异常（后台可能已退出）:', e.message);
+      _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+    }
+  }, 50000); // 50秒刷新一次，留 10 秒余量
+}
+
+// ====== 授权流程 ======
+// 格式化授权状态显示（与桌面版格式一致）
+function formatAuthStatus(ar) {
+  var isPermanent = ar.expire_ts === 0;
+  var statusEl = document.getElementById('auth-status');
+  if (ar.is_trial) {
+    statusEl.textContent = '授权类型：试用版，剩余' + ar.days_left + '天';
+    statusEl.style.color = '#fa0';
+  } else if (isPermanent) {
+    statusEl.textContent = '授权类型：永久';
+    statusEl.style.color = '#26a69a';
+  } else {
+    statusEl.textContent = '授权类型：正式，剩余' + ar.days_left + '天';
+    statusEl.style.color = '#26a69a';
+  }
+}
+
+// 启动时静默检查授权（试用/正式），不弹窗
+async function initAuth() {
+  try {
+    // 1. 先尝试 session（包含试用检查）
+    const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const sessionResp = await fetch(_apiUrl('/api/auth/session'), {
+      method: 'POST',
+      headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ nonce, app_id: 'tdx_zen', platform: 'replay' })
+    });
+    const sessionData = await sessionResp.json();
+
+    if (sessionData && sessionData.success && sessionData.auth_result && sessionData.auth_result.valid) {
+      // 试用或正式授权通过
+      authValid = true;
+      _zenAuthPanelDismissed = false;
+      hideAuthPanel();
+      // 初始化 WASM 授权
+      if (wasmModule && sessionData.attestation) {
+        wasmModule.init_auth_attestation(sessionData.attestation, nonce, 'tdx_zen', 'replay');
+        enableControls();
+        // 启动主动令牌刷新，防止 60 秒 TTL 过期
+        startAuthRefreshTimer();
+      }
+      // 显示授权状态
+      formatAuthStatus(sessionData.auth_result);
+      // 启动 10 秒定时授权检查（与 desktop/apk 一致）
+      startAuthCheckTimer();
+      return;
+    }
+
+    // 2. 授权不通过，显示提示和授权按钮（不弹窗）
+    const ec = (sessionData && sessionData.auth_result) ? (sessionData.auth_result.error_code || 0) : 0;
+    _setAuthBadge(ec);
+    // 授权类错误自动弹出授权面板
+    if (_zenIsAuthError(ec)) {
+      _zenAutoShowAuthPanel(sessionData && sessionData.machine_code);
+    }
+    // 启动 10 秒定时授权检查（与 desktop/apk 一致）
+    startAuthCheckTimer();
+    return;
+  } catch (err) {
+    // 区分网络错误（后台退出/网络不可用）与真正的授权失败
+    if (err instanceof TypeError && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
+      backendDown = true;
+      _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+    } else {
+      _setAuthBadge(_EC.NONE, '授权服务连接失败: ' + err.message);
+      // 非网络错误，可能是授权问题，自动弹授权面板
+      _zenAutoShowAuthPanel();
+    }
+    // 即使初始检查失败也启动定时检查，授权恢复后可自动检测到
+    startAuthCheckTimer();
+  }
+}
+
+function showAuthPanel(machineCode, error, authResult) {
+  const panel = document.getElementById('auth-panel');
+  const overlay = document.getElementById('auth-overlay');
+  panel.style.display = 'block';
+  if (overlay) overlay.classList.add('active');
+  const mcText = document.querySelector('#machine-code .mc-text');
+  if (mcText) mcText.textContent = machineCode || '获取失败';
+  const copyBtn = document.getElementById('btn-copy-mc');
+  if (copyBtn && machineCode) copyBtn.dataset.machineCode = machineCode;
+  document.getElementById('auth-error').textContent = error || '';
+  document.getElementById('trial-info').textContent = '';
+  // 显示授权状态信息
+  _renderAuthStatusInfo(authResult);
+  // 未解码出授权信息时，错误显示在 auth-error（存储类错误除外）
+  if (authResult && !authResult.valid && !authResult.user && authResult.error_code !== 10 /* storage */ && !error) {
+    var ec1 = Number(authResult.error_code) || 0;
+    var errorEl = document.getElementById('auth-error');
+    errorEl.textContent = _zenErrMsg(ec1, authResult.message);
+    errorEl.style.color = 'var(--sell)';
+  }
+  _lastDecodeResult = null;
+}
+
+function hideAuthPanel() {
+  document.getElementById('auth-panel').style.display = 'none';
+  const overlay = document.getElementById('auth-overlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+async function onAuthSuccess(authResult, machineCode) {
+  // 授权成功，重置 dismissed 标志
+  _zenAuthPanelDismissed = false;
+  // 创建 session 获取 attestation，初始化 WASM 授权
+  const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+  const resp = await fetch(_apiUrl('/api/auth/session'), {
+    method: 'POST',
+    headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ nonce, app_id: 'tdx_zen', platform: 'replay' })
+  });
+  const data = await resp.json();
+  if (data && data.success && data.attestation && wasmModule) {
+    const ar = wasmModule.init_auth_attestation(data.attestation, nonce, 'tdx_zen', 'replay');
+    if (ar && ar.valid) {
+      enableControls();
+      startAuthRefreshTimer();
+    } else {
+      console.error('[replay] onAuthSuccess: init_auth_attestation 返回 invalid', ar);
+    }
+  }
+}
+
+function enableControls() {
+  if (currentMode !== 'batch') {
+    ['btn-first','btn-prev','btn-play','btn-next','btn-last'].forEach(id => {
+      document.getElementById(id).disabled = false;
+    });
+  }
+  updateTradeButtons();
+}
+
+function disablePlaybackControls() {
+  ['btn-first','btn-prev','btn-play','btn-next','btn-last'].forEach(id => {
+    document.getElementById(id).disabled = true;
+  });
+  // 停止播放
+  if (playing) pause();
+  // 整体推送模式也允许交易操作
+  updateTradeButtons();
+}
+
+// 复制机器码按钮
+document.getElementById('btn-copy-mc').addEventListener('click', function () {
+  var mc = this.dataset.machineCode || '';
+  if (!mc) {
+    this.textContent = '机器码未获取';
+    var self0 = this;
+    setTimeout(function () { self0.textContent = '复制机器码'; }, 1500);
+    return;
+  }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(mc).then(function() {}, function() {
+        var ti = document.createElement('input');
+        ti.value = mc;
+        document.body.appendChild(ti);
+        ti.select();
+        document.execCommand('copy');
+        document.body.removeChild(ti);
+      });
+    } else {
+      var ti = document.createElement('input');
+      ti.value = mc;
+      document.body.appendChild(ti);
+      ti.select();
+      document.execCommand('copy');
+      document.body.removeChild(ti);
+    }
+    this.textContent = '已复制';
+    var self = this;
+    setTimeout(function () { self.textContent = '复制机器码'; }, 1500);
+  } catch (e) {
+    this.textContent = '复制失败';
+    var self2 = this;
+    setTimeout(function () { self2.textContent = '复制机器码'; }, 1500);
+  }
+});
+
+// 复制邮箱按钮
+document.getElementById('btn-copy-email').addEventListener('click', function () {
+  try {
+    var email = 'qhgary@sina.com';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(email).then(function() {}, function() {
+        var ti = document.createElement('input');
+        ti.value = email;
+        document.body.appendChild(ti);
+        ti.select();
+        document.execCommand('copy');
+        document.body.removeChild(ti);
+      });
+    } else {
+      var ti = document.createElement('input');
+      ti.value = email;
+      document.body.appendChild(ti);
+      ti.select();
+      document.execCommand('copy');
+      document.body.removeChild(ti);
+    }
+    this.textContent = '已复制';
+    var self = this;
+    setTimeout(function () { self.textContent = '复制邮箱'; }, 1500);
+  } catch (e) {
+    this.textContent = '复制失败';
+    var self2 = this;
+    setTimeout(function () { self2.textContent = '复制邮箱'; }, 1500);
+  }
+});
+
+
+// ====== 授权码自动解码 ======
+// 保存最近一次解码结果，关闭按钮使用此结果
+let _lastDecodeResult = null;
+let _decodeTimer = null;
+
+// 渲染授权面板解码信息：有 user 即成功解码（有效绿色 / 过期红色），解析失败（无 user）隐藏
+function _renderAuthStatusInfo(authResult) {
+  const el = document.getElementById('auth-status-info');
+  if (!el) return;
+  if (!authResult || !authResult.user) { el.textContent = ''; el.style.display = 'none'; return; }
+  const expired = !authResult.valid && Number(authResult.error_code) === _EC.EXPIRED;
+  const isPermanent = authResult.expire_ts === 0;
+  const isTrial = authResult.is_trial === true;
+  const parts = [];
+  parts.push('授权类型：' + (isTrial ? '试用' : '正式'));
+  parts.push('授权给：' + (isTrial ? '试用用户' : authResult.user));
+  if (expired) {
+    parts.push('<span class="zen-expired">授权已过期</span>');
+    el.style.color = 'var(--muted)';
+  } else if (isTrial) {
+    parts.push('剩余 ' + authResult.days_left + ' 天');
+    el.style.color = '#fa0';
+  } else if (isPermanent) {
+    parts.push('有效期：永久');
+    el.style.color = 'var(--buy)';
+  } else {
+    parts.push('剩余 ' + authResult.days_left + ' 天');
+    el.style.color = 'var(--buy)';
+  }
+  el.innerHTML = parts.join('<span class="sep">|</span>');
+  el.style.display = 'flex';
+}
+
+// 更新授权状态信息显示（授权给谁/剩余天数）
+// 有 user 即已成功解码：有效正常显示，已过期时剩余天数位显示红色"授权已过期"；
+// 解析失败（无 user）则隐藏
+function _updateAuthStatusInfo(authResult) {
+  _renderAuthStatusInfo(authResult);
+}
+
+function _decodeLicenseKey(showSaveMessage) {
+  const key = document.getElementById('license-input').value.trim();
+  const errorEl = document.getElementById('auth-error');
+
+  if (!key) {
+    _lastDecodeResult = null;
+    errorEl.textContent = '';
+    _updateAuthStatusInfo(null);
+    return;
+  }
+
+  // 调用 license API 进行解码
+  fetch(_apiUrl('/api/auth/license'), {
+    method: 'POST',
+    headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ license_key: key })
+  })
+  .then(function(r) {
+    // 无论 HTTP 状态码如何，都尝试解析 JSON 响应体；
+    // 只有 fetch 本身失败（网络不可达/超时）才进入 catch。
+    return r.json().catch(function() { return null; }).then(function(data) {
+      if (!r.ok && !data) {
+        // HTTP 非 2xx 且无 JSON body（如 503 纯文本），才算认证模块不可用
+        throw new Error('认证模块不可用');
+      }
+      return data || {};
+    });
+  })
+  .then(data => {
+    const ar = data && data.auth_result;
+    // 解码出 user 即说明授权已成功解析（无论是否过期）；解析失败则无 user
+    if (ar && ar.user) {
+      if (ar.valid) {
+        _lastDecodeResult = data;
+        // 只有用户主动修改授权码时才显示"授权已保存"等后端消息
+        errorEl.textContent = (showSaveMessage && data.message) ? data.message : '';
+        errorEl.style.color = 'var(--buy)';
+      } else {
+        // 已过期：不改用成功流程，底部不再重复提示"授权已过期"
+        _lastDecodeResult = null;
+        errorEl.textContent = '';
+      }
+      _updateAuthStatusInfo(ar);
+    } else {
+      _lastDecodeResult = null;
+      // 授权无效（解析失败等），显示错误信息
+      var errMsg;
+      if (ar && !ar.valid) {
+        var ec = Number(ar.error_code) || 0;
+        errMsg = _zenErrMsg(ec, ar.message);
+      } else {
+        errMsg = (data && data.message) || '解码失败';
+      }
+      errorEl.textContent = errMsg;
+      errorEl.style.color = 'var(--sell)';
+      _updateAuthStatusInfo(ar || null);
+    }
+  })
+  .catch(err => {
+    _lastDecodeResult = null;
+    // 只有 fetch 本身失败（网络不可达/超时/连接被拒）才算网络错误；
+    var isNetworkError = err && (err.name === 'TypeError' || /fetch|network|timeout/i.test(err.message || ''));
+    errorEl.textContent = isNetworkError ? '网络错误' : (err.message || '请求失败');
+    errorEl.style.color = 'var(--sell)';
+    _updateAuthStatusInfo(null);
+  });
+}
+
+// 授权码输入框：防抖触发自动解码
+document.getElementById('license-input').addEventListener('input', () => {
+  if (_decodeTimer) clearTimeout(_decodeTimer);
+  _decodeTimer = setTimeout(() => _decodeLicenseKey(true), 300);
+});
+
+
+document.getElementById('btn-auth').addEventListener('click', async () => {
+  const panel = document.getElementById('auth-panel');
+  if (panel.style.display === 'block') {
+    hideAuthPanel();
+    _zenAuthPanelDismissed = true; // 用户通过按钮关闭，定时检查不再自动弹出
+    return;
+  }
+  // 显示面板，异步获取机器码和已保存的授权码
+  panel.style.display = 'block';
+  const overlay = document.getElementById('auth-overlay');
+  if (overlay) overlay.classList.add('active');
+  document.querySelector('#machine-code .mc-text').textContent = '获取中...';
+  document.getElementById('auth-error').textContent = '';
+  document.getElementById('license-input').value = '';
+  const statusInfo = document.getElementById('auth-status-info');
+  if (statusInfo) statusInfo.style.display = 'none';
+  _lastDecodeResult = null;
+  try {
+    const resp = await fetch(_apiUrl('/api/auth/status'), { headers: _apiHeaders() });
+    const data = await resp.json();
+    document.querySelector('#machine-code .mc-text').textContent = (data && data.machine_code) || '获取失败';
+    const copyBtn = document.getElementById('btn-copy-mc');
+    if (copyBtn && data && data.machine_code) copyBtn.dataset.machineCode = data.machine_code;
+    // 回显已有授权内容
+    if (data && data.license_key) {
+      document.getElementById('license-input').value = _smartExtractKey(data.license_key);
+      // 已有授权码时触发自动解码（不显示"已保存"消息）
+      _decodeLicenseKey(false);
+    }
+    // 显示授权状态信息
+    if (statusInfo && data && data.auth_result) {
+      const ar = data.auth_result;
+      if (ar && ar.user) {
+        // 有 user 渲染解码信息（有效绿色 / 过期红色；过期由 _decodeLicenseKey 处理底部提示）
+        _renderAuthStatusInfo(ar);
+      } else {
+        // 未解码出授权信息：隐藏，错误显示在 auth-error（存储类错误除外）
+        _renderAuthStatusInfo(null);
+        const ec1 = Number(ar.error_code) || 0;
+        if (ec1 !== 10 /* storage */) {
+          const errorEl = document.getElementById('auth-error');
+          errorEl.textContent = _zenErrMsg(ec1, ar.message);
+          errorEl.style.color = 'var(--sell)';
+        }
+      }
+    }
+  } catch (err) {
+    document.querySelector('#machine-code .mc-text').textContent = '获取失败';
+  }
+});
+
+document.getElementById('btn-activate').addEventListener('click', async () => {
+  // 关闭按钮：解码已由输入框自动完成并保存，此处仅关闭面板
+  // 若有解码成功的结果，触发授权成功流程
+  if (_lastDecodeResult) {
+    try {
+      const data = _lastDecodeResult;
+      authValid = true;
+      _zenAuthPanelDismissed = false; // 授权成功，重置 dismissed
+      hideAuthPanel();
+      await onAuthSuccess(data.auth_result, data.machine_code);
+      formatAuthStatus(data.auth_result);
+      // 授权从无效变有效：如果已有数据，强制触发一次重新分析
+      if (allKlines.length > 0) {
+        await analyzeRange();
+      }
+    } catch (err) {
+      document.getElementById('auth-error').textContent = '激活失败: ' + err.message;
+    }
+  } else {
+    // 用户未输入有效授权码就关闭面板，标记 dismissed 防止定时检查重复弹窗
+    _zenAuthPanelDismissed = true;
+    hideAuthPanel();
+  }
+});
+
+// ====== 文件加载 + 逐根推送 ======
+document.getElementById('file-input').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = async (ev) => {
+    try {
+      let text = ev.target.result;
+      // 检测是否为 GBK 编码：UTF-8 解码失败时会产生 U+FFFD 替换字符
+      if (text.includes('\uFFFD')) {
+        const r2 = new FileReader();
+        r2.onload = (ev2) => {
+          try { loadAndAnalyze(ev2.target.result, f.name); }
+          catch(err) { alert('数据解析失败: ' + err.message); }
+        };
+        r2.readAsText(f, 'gbk');
+        return;
+      }
+      loadAndAnalyze(text, f.name);
+    } catch(err) {
+      alert('数据解析失败: ' + err.message);
+    }
+  };
+  r.readAsText(f);
+});
+
+function parseTdxText(text) {
+  if (!text || text.trim().length === 0) throw new Error('文件内容为空');
+  const lines = text.split(/\r?\n|\r/);
+  if (lines.length < 3) throw new Error('文件行数不足');
+  
+  // 解析股票基本信息（从标题行提取）
+  let stockName = '';
+  let stockCode = '';
+  let periodType = '';
+  
+  try {
+    if (lines.length > 0 && lines[0]) {
+      const titleLine = lines[0];
+      const titleStr = titleLine.trim();
+      // 尝试解析 "股票名称 (股票代码)" 格式
+      if (titleStr.includes('(') && titleStr.includes(')')) {
+        const openParen = titleStr.lastIndexOf('(');
+        const closeParen = titleStr.lastIndexOf(')');
+        if (openParen < closeParen) {
+          stockCode = titleStr.substring(openParen + 1, closeParen).trim();
+          stockName = titleStr.substring(0, openParen).trim();
+        }
+      } else {
+        stockName = titleStr;
+      }
+    }
+  } catch (e) {
+    console.warn('[parse] Failed to parse stock info from title line:', e.message);
+  }
+  
+  const klines = [];
+
+  // 从表头识别真实成交额列：仅当 成交量 列紧跟之后一列是 成交额 才算真实成交额。
+  // 表头可能比数据行多出空列（如指数文件 999999：表头第2列空、成交额在表头 idx7 但数据 idx6），
+  // 因此表头列索引不能直接当数据列索引用——成交额在数据行中始终是 成交量数据列 + 1。
+  // 扫描所有行找 成交量 单元格（数据行无中文标签，不会误匹配），
+  // 否则（如 TDX 多指标导出，紧跟成交量的是 ZEN.BI 等指标价格）不当作成交额，
+  // 避免把指标价格误读为成交额导致 A: 显示错误。
+  let hasAmtCol = false; // 是否识别到真实成交额列
+  for (let i = 0; i < lines.length; i++) {
+    const hd = (lines[i] || '').trim();
+    if (!hd) continue;
+    const hp = hd.split('\t');
+    if (hp.length < 5) continue;
+    for (let c = 0; c < hp.length; c++) {
+      const hc = (hp[c] || '').trim().toLowerCase();
+      if (hc.includes('成交量') || hc === '量') {
+        const nx = (hp[c + 1] || '').trim().toLowerCase();
+        if (nx.includes('成交额') || nx.includes('金额') || nx.includes('amount') || nx === '额') {
+          hasAmtCol = true;
+        }
+        break; // 找到 成交量 列即可，其后是否成交额已判定
+      }
+    }
+    if (hasAmtCol) break;
+  }
+
+  // 自动检测数据格式：日K 或 分钟K（两种分钟格式：日期\t时间 或 日期-时间 合并）
+  let isMinuteData = null; // null=未确定, true=分钟级, false=日级
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/\r$/, '');
+    if (!line || line.trim().length === 0) continue;
+    const parts = line.split('\t');
+    if (parts.length < 5) continue;
+    // 跳过表头等非数据行（开盘列非数字），不参与格式判定也不作为 K 线
+    if (isNaN(parseFloat(parts[1])) || parts[1].trim() === '') continue;
+
+    // 首次有效数据行决定数据格式
+    if (isMinuteData === null) {
+      // 通达信分钟数据检测：
+      // 格式1: 日期\t时间\t开\t高\t低\t收...（第2列含":"）
+      // 格式2: 日期-时间\t开\t高\t低\t收...（第1列含":"，如 2026/04/10-11:00）
+      isMinuteData = (parts.length >= 6 && parts[1].trim().includes(':')) ||
+                     (parts[0].trim().includes(':'));
+    }
+
+    let date, o, h, l, c, v = 0, a = 0;
+    if (isMinuteData) {
+      if (parts[1].trim().includes(':')) {
+        // 格式1: 日期\t时间\t开\t高\t低\t收 [量] [额] (额可选)
+        date = parts[0].trim() + ' ' + parts[1].trim();
+        o = parseFloat(parts[2]);
+        h = parseFloat(parts[3]);
+        l = parseFloat(parts[4]);
+        c = parseFloat(parts[5]);
+        v = parseFloat(parts[6]) || 0;
+        a = hasAmtCol ? (parseFloat(parts[7]) || 0) : 0;  // 成交额(可选，成交量数据列+1)
+      } else {
+        // 格式2: 日期-时间\t开\t高\t低\t收 [量] [额] (额可选)
+        date = parts[0].trim();
+        o = parseFloat(parts[1]);
+        h = parseFloat(parts[2]);
+        l = parseFloat(parts[3]);
+        c = parseFloat(parts[4]);
+        v = parseFloat(parts[5]) || 0;
+        a = hasAmtCol ? (parseFloat(parts[6]) || 0) : 0;  // 成交额(可选，成交量数据列+1)
+      }
+      periodType = '分钟K线';
+    } else {
+      // 日级数据：日期 开 高 低 收 [量] [额]
+      date = parts[0].trim();
+      o = parseFloat(parts[1]);
+      h = parseFloat(parts[2]);
+      l = parseFloat(parts[3]);
+      c = parseFloat(parts[4]);
+      v = parseFloat(parts[5]) || 0;
+      a = hasAmtCol ? (parseFloat(parts[6]) || 0) : 0;  // 成交额(元)，成交量数据列+1
+      periodType = '日K线';
+    }
+    if (isNaN(o) || isNaN(h) || isNaN(l) || isNaN(c)) continue;
+    if (h === 0 || l === 0) continue;
+    klines.push({ d: date, o, h, l, c, v, a });
+  }
+  if (klines.length === 0) throw new Error('未解析到有效数据行');
+  
+  // 保存股票信息供外部使用
+  window.zenStockInfo = {
+    name: stockName || '未识别',
+    code: stockCode || 'N/A',
+    period: periodType || '未知周期'
+  };
+  
+  return klines;
+}
+
+// 显示股票信息，带适当的分隔符和错误/截断处理
+function updateStockInfoDisplay(stockInfo) {
+  const stockEl = document.getElementById('stock-info');
+  if (!stockEl) return;
+  
+  try {
+    if (!stockInfo || (!stockInfo.name && !stockInfo.code && !stockInfo.period)) {
+      // 没有股票信息时显示分隔符和提示
+      stockEl.innerHTML = '<span style="color:var(--border)">|</span> 未能解析股票代码/周期';
+      return;
+    }
+    
+    // 格式化股票信息: 名称/代码/周期，用竖线分隔
+    let stockName = (stockInfo.name || '未识别').trim();
+    let stockCode = (stockInfo.code || 'N/A').trim();
+    let period = (stockInfo.period || '未知').trim();
+    
+    // 截断过长信息（保留最多12字符）
+    if (stockName.length > 12) {
+      stockName = stockName.substring(0, 12) + '...';
+    }
+    if (stockCode.length > 10) {
+      stockCode = stockCode.substring(0, 10) + '...';
+    }
+    if (period.length > 8) {
+      period = period.substring(0, 8) + '...';
+    }
+    
+    // 构建显示内容，用竖线分隔
+    stockEl.innerHTML = 
+      '<span style="color:var(--border)">|</span>' +
+      ' ' + stockName + 
+      '<span style="color:var(--border)"> | </span>' + stockCode +
+      '<span style="color:var(--border)"> | </span>' + period;
+      
+  } catch (e) {
+    console.error('[stock-info] Failed to update display:', e);
+    stockEl.innerHTML = '<span style="color:var(--border)">|</span> <span style="color:var(--sell)">解析错误</span>';
+  }
+}
+
+async function loadAndAnalyze(text, fileName) {
+  resetTrades();
+  allKlines = parseTdxText(text);
+  _klineDataVersion++;
+  _fullRangeCache = null;
+  // 根据数据有无成交额/成交量，设置勾选框的 enable/disable 和默认勾选状态
+  const hasVolData = allKlines.some(k => k.v > 0);
+  const hasAmtData = allKlines.some(k => k.a > 0);
+  const volEl = document.getElementById('L-vol');
+  const amtEl = document.getElementById('L-amount');
+  // disable 无数据的勾选框
+  if (volEl) { volEl.disabled = !hasVolData; }
+  if (amtEl) { amtEl.disabled = !hasAmtData; }
+  // 默认勾选成交量（如有数据），否则勾选成交额（如有数据），都不行就都不选
+  if (volEl && hasVolData) {
+    volEl.checked = true; layers.vol = true;
+    if (amtEl) { amtEl.checked = false; layers.amount = false; }
+  } else if (amtEl && hasAmtData) {
+    amtEl.checked = true; layers.amount = true;
+    if (volEl) { volEl.checked = false; layers.vol = false; }
+  } else {
+    if (volEl) { volEl.checked = false; layers.vol = false; }
+    if (amtEl) { amtEl.checked = false; layers.amount = false; }
+  }
+  const showVol = (layers.vol && hasVolData) || (layers.amount && hasAmtData);
+  PAD_B = showVol ? 80 : 28;
+  const n = allKlines.length;
+  document.getElementById('data-info').textContent = fileName;
+  document.getElementById('empty').style.display = 'none';
+  
+  // 显示股票信息相关的分隔符和内容
+  updateStockInfoDisplay(window.zenStockInfo || {});
+
+  rangeStart = 0; rangeEnd = n - 1; currentStep = 0;
+  updateRangeSlider();
+  await analyzeRange();
+}
+
+// ====== 坐标映射 ======
+// xOf 中的 i 是 snapshots 中的局部索引（0-based），
+// 但 allKlines 是全局的，需要偏移
+function xOf(i) {
+  if (currentMode === 'batch') return PAD_L + i * KW + KW / 2 - panOffset;
+  return PAD_L + (i + rangeStart) * KW + KW / 2 - panOffset;
+}
+
+function getVisibleRange() {
+const W = canvas.width / dpr;
+const total = getTotalSteps() + 1;
+if (currentMode === 'batch') {
+const firstK = Math.max(0, Math.floor((panOffset - PAD_L) / KW));
+const lastK = Math.min(total - 1, Math.ceil((panOffset + W - PAD_L - PAD_R) / KW));
+return [Math.max(0, firstK), Math.max(0, lastK)];
+}
+const firstK = Math.max(0, Math.floor((panOffset - PAD_L) / KW) - rangeStart);
+// streaming 模式下只显示到 currentStep，K 线逐根出现
+const lastK = Math.min(currentStep, Math.ceil((panOffset + W - PAD_L - PAD_R) / KW) - rangeStart);
+return [Math.max(0, firstK), Math.max(0, lastK)];
+}
+
+function autoScroll() {
+const W = canvas.width / dpr;
+const x = xOf(currentStep);
+const base = currentMode === 'batch' ? 0 : rangeStart * KW;
+if (x > W - PAD_R - KW * 2) {
+panOffset = base + PAD_L + currentStep * KW + KW / 2 - (W - PAD_R - KW * 2);
+} else if (x < PAD_L + KW * 2) {
+panOffset = base + PAD_L + currentStep * KW + KW / 2 - KW * 8;
+}
+clampPan();
+}
+
+function clampPan() {
+const W = canvas.width / dpr;
+if (currentMode === 'batch') {
+const contentW = (getTotalSteps() + 1) * KW;
+const maxPan = Math.max(0, contentW - (W - PAD_L - PAD_R));
+panOffset = Math.max(0, Math.min(maxPan, panOffset));
+} else {
+// streaming 模式下，内容宽度只到 currentStep
+const contentW = (currentStep + 1) * KW;
+const minPan = rangeStart * KW;
+const maxPan = Math.max(minPan, minPan + contentW - (W - PAD_L - PAD_R));
+panOffset = Math.max(minPan, Math.min(maxPan, panOffset));
+}
+}
+
+// ====== 价格范围 ======
+// 全量范围极值缓存：只依赖 rangeStart/rangeEnd/allKlines（播放期间不变），
+// 避免每次重绘都全范围遍历。数据重载时通过版本号失效。
+let _klineDataVersion = 0;
+let _fullRangeCache = null; // { ver, start, end, min, max }
+function getGMinMax() {
+  let mn = Infinity, mx = -Infinity;
+  // streaming 模式下只考虑已显示的 K 线（到 currentStep）
+  const lastK = currentMode === 'batch' ? rangeEnd : Math.min(rangeEnd, rangeStart + currentStep);
+  for (let i = rangeStart; i <= lastK && i < allKlines.length; i++) {
+    const k = allKlines[i]; if (!k) continue;
+    if (k.l < mn) mn = k.l; if (k.h > mx) mx = k.h;
+  }
+  // 只用当前快照的中枢价格范围（而非全部快照）
+  const snap = getCurrentSnapshot();
+  if (snap) {
+    snap.pivots.forEach(p => { if (p.dd < mn) mn = p.dd; if (p.gg > mx) mx = p.gg; });
+    snap.seg_pivots.forEach(p => { if (p.dd < mn) mn = p.dd; if (p.gg > mx) mx = p.gg; });
+  }
+  // 限制价格范围：当 K 线很少时，单根 K 线的振幅可能很大，
+  // 导致整根 K 线撑满屏幕。用全量数据的振幅作为参考下限，
+  // 确保早期阶段不会因为只有 1-2 根 K 线而过度放大。
+  let c = _fullRangeCache;
+  if (!c || c.ver !== _klineDataVersion || c.start !== rangeStart || c.end !== rangeEnd) {
+    let fullMin = Infinity, fullMax = -Infinity;
+    for (let i = rangeStart; i <= rangeEnd && i < allKlines.length; i++) {
+      const k = allKlines[i]; if (!k) continue;
+      if (k.l < fullMin) fullMin = k.l; if (k.h > fullMax) fullMax = k.h;
+    }
+    c = { ver: _klineDataVersion, start: rangeStart, end: rangeEnd, min: fullMin, max: fullMax };
+    _fullRangeCache = c;
+  }
+  const fullMin = c.min, fullMax = c.max;
+  const fullRange = fullMax - fullMin;
+  if (fullRange > 0) {
+    // 如果当前范围不到全量范围的 1/4，就以全量范围的 1/4 作为最小范围
+    const curRange = mx - mn;
+    const minRange = fullRange * 0.25;
+    if (curRange < minRange) {
+      const center = (mn + mx) / 2;
+      mn = center - minRange / 2;
+      mx = center + minRange / 2;
+    }
+  }
+  const pad = (mx - mn) * 0.06;
+  return [mn - pad, mx + pad];
+}
+
+// 可见范围价格极值：只统计当前屏幕内可见的 K 线，平移/缩放时坐标自适应。
+// 缓存键为 (数据版本, 可见首尾)，播放推进/平移/缩放时按需重算。
+let _visRangeCache = null; // { ver, vs, ve, min, max }
+function getVisibleMinMax() {
+  const [vs, ve] = getVisibleRange();
+  if (ve < vs) return getGMinMax();
+  let c = _visRangeCache;
+  if (!c || c.ver !== _klineDataVersion || c.vs !== vs || c.ve !== ve) {
+    let mn = Infinity, mx = -Infinity;
+    for (let i = vs; i <= ve; i++) {
+      const k = allKlines[rangeStart + i]; if (!k) continue;
+      if (k.l < mn) mn = k.l; if (k.h > mx) mx = k.h;
+    }
+    if (!isFinite(mn)) return getGMinMax();
+    // 与可见窗口有重叠的中枢：ZG/ZD 界线纳入范围，避免中枢框线被裁出画面
+    const snap = getCurrentSnapshot();
+    if (snap) {
+      const inWin = (s, e) => e >= vs && s <= ve;
+      snap.pivots.forEach(p => { if (inWin(p.s, p.e)) { if (p.zd < mn) mn = p.zd; if (p.zg > mx) mx = p.zg; } });
+      snap.seg_pivots.forEach(p => { if (inWin(p.s, p.e)) { if (p.zd < mn) mn = p.zd; if (p.zg > mx) mx = p.zg; } });
+    }
+    // 可见 K 线过少时限制放大倍数：以全量振幅的 15% 为最小范围，
+    // 防止缩放到只剩一两根 K 线时单根 K 线被拉得过长
+    let fc = _fullRangeCache;
+    if (!fc || fc.ver !== _klineDataVersion || fc.start !== rangeStart || fc.end !== rangeEnd) {
+      getGMinMax(); // 副作用：刷新 _fullRangeCache
+      fc = _fullRangeCache;
+    }
+    const fullRange = fc.max - fc.min;
+    if (fullRange > 0) {
+      const minRange = fullRange * 0.15;
+      if (mx - mn < minRange) {
+        const center = (mn + mx) / 2;
+        mn = center - minRange / 2; mx = center + minRange / 2;
+      }
+    }
+    c = { ver: _klineDataVersion, vs, ve, min: mn, max: mx };
+    _visRangeCache = c;
+  }
+  const pad = (c.max - c.min) * 0.08;
+  return [c.min - pad, c.max + pad];
+}
+
+// 格式化日期/时间标签
+// 日级数据 "2025/04/01" → "04/01"
+// 分钟级数据 "2025/04/01 09:35" → "04/01 09:35"
+function fmtDate(s) {
+  if (!s) return '';
+  // 检测是否包含时间部分
+  const spaceIdx = s.indexOf(' ');
+  if (spaceIdx > 0) {
+    // 分钟级数据：日期 + 时间
+    const datePart = s.substring(0, spaceIdx);
+    const timePart = s.substring(spaceIdx + 1);
+    const dp = datePart.split('/');
+    const dateStr = dp.length >= 3 ? dp[1] + '/' + dp[2] : datePart;
+    return dateStr + ' ' + timePart;
+  }
+  // 日级数据
+  const p = s.split('/');
+  return p.length >= 3 ? p[1] + '/' + p[2] : s;
+}
+
+// ====== 绘制 ======
+function draw() {
+  if (!hasData()) return;
+  const W = canvas.width / dpr;
+  const H = canvas.height / dpr;
+  ctx.clearRect(0, 0, W, H);
+
+  const [visFirst, visLast] = getVisibleRange();
+  const snap = getCurrentSnapshot();
+  if (!snap) return;
+  const klines = snap.klines;
+  const [gMin, gMax] = getVisibleMinMax();
+  const range = Math.max(gMax - gMin, 0.001);
+  const yOf = (price) => PAD_T + (gMax - price) / range * (H - PAD_T - PAD_B);
+
+  // Y 轴刻度（只画左右侧短线+数字，不画跨画面的浅灰横线，保持 replay 原生视觉风格）
+  const nTicks = 8;
+  // 选「优美步长」：1,2,2.5,5,10 × 10^n
+  const rawStep = range / nTicks;
+  const pow10 = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const m = rawStep / pow10;
+  let step = pow10;
+  if (m < 1.5) step = pow10;
+  else if (m < 3.5) step = 2 * pow10;
+  else if (m < 7.5) step = 5 * pow10;
+  else step = 10 * pow10;
+  const digits = Math.max(0, -Math.floor(Math.log10(step)) + 1); // 小数位数
+  ctx.lineWidth = 1;
+  // 左轴：13px 数字 + 6px 刻度短线
+  ctx.font = '13px monospace';
+  for (let p = Math.ceil(gMin / step) * step; p <= gMax; p += step) {
+    if (step === 0) break;
+    const y = yOf(p);
+    ctx.strokeStyle = 'rgba(139,148,158,0.55)';
+    ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L - 6, y); ctx.stroke();
+    ctx.fillStyle = '#a9b2bd';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    let label = (digits > 0) ? p.toFixed(digits) : String(Math.round(p));
+    if (Math.abs(p) >= 1000) label = String(Math.round(p));
+    ctx.fillText(label, PAD_L - 10, y);
+  }
+  // 右轴：12px 辅助数字 + 4px 刻度短线
+  ctx.font = '12px monospace';
+  for (let p = Math.ceil(gMin / step) * step; p <= gMax; p += step) {
+    if (step === 0) break;
+    const y = yOf(p);
+    ctx.strokeStyle = 'rgba(139,148,158,0.45)';
+    ctx.beginPath(); ctx.moveTo(W - PAD_R, y); ctx.lineTo(W - PAD_R + 4, y); ctx.stroke();
+    ctx.fillStyle = '#7b8490'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    let label = (digits > 0) ? p.toFixed(digits) : String(Math.round(p));
+    if (Math.abs(p) >= 1000) label = String(Math.round(p));
+    ctx.fillText(label, W - PAD_R + 8, y);
+  }
+  // 基线：仅在 0 价（K 线底部）画一条横托
+  ctx.strokeStyle = 'rgba(139,148,158,0.40)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD_L, H - PAD_B); ctx.lineTo(W - PAD_R, H - PAD_B); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD_L, H - PAD_B); ctx.lineTo(W - PAD_R, H - PAD_B); ctx.stroke();
+
+  // 裁剪到图表绘制区域，防止左移时 K 线等元素覆盖 Y 轴（纵向 0 轴）
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(PAD_L, 0, W - PAD_L - PAD_R, H);
+  ctx.clip();
+
+  // K 线
+  // 注意：layers.kline 开关控制缠论K（合并K线）vs 原始K线的显示模式
+  //   - 开启时：用 merged_high/merged_low (k.mh/k.ml) 绘制合并后的缠论K线
+  //   - 关闭时：用原始 high/low (k.h/k.l) 绘制 OHLC 红绿柱
+  // 笔的端点价格由 Rust 核心库决定，与此处独立
+  // 桌面版/安卓版使用 HQChart 框架原生 K 线绘制，不存在此问题
+  if (layers.kline) {
+    // 缠论K：显示合并后的 K 线，独立 K 线用实心柱，被合并的用虚线框
+    for (let i = visFirst; i <= Math.min(visLast, klines.length - 1); i++) {
+      const k = klines[i]; if (!k) continue;
+      const x = xOf(i);
+      const yMH = yOf(k.mh), yML = yOf(k.ml);
+      if (k.ind) {
+        // 独立 K 线：实心柱（用合并后的高低）
+        ctx.fillStyle = '#26a69a';
+        ctx.fillRect(x - BAR_W/2, yMH, BAR_W, Math.max(yML - yMH, 1));
+      } else {
+        // 被合并的 K 线：虚线框
+        ctx.strokeStyle = 'rgba(110,118,129,0.5)'; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
+        ctx.strokeRect(x - BAR_W/2, yMH, BAR_W, Math.max(yML - yMH, 1));
+        ctx.setLineDash([]);
+      }
+    }
+  } else {
+    // 原始K：OHLC 实心红绿柱（必须使用 k.h/k.l 原始价格，不能用 k.mh/k.ml 合并价格）
+    for (let i = visFirst; i <= Math.min(visLast, klines.length - 1); i++) {
+      const k = klines[i]; if (!k) continue;
+      const raw = allKlines[rangeStart + i]; if (!raw) continue;
+      const x = xOf(i);
+      const yH = yOf(k.h), yL = yOf(k.l);
+      const yO = yOf(raw.o), yC = yOf(raw.c);
+      const isUp = raw.c >= raw.o;
+      const color = isUp ? '#26a69a' : '#ef5350';
+      ctx.fillStyle = color;
+      const bodyTop = Math.min(yO, yC);
+      const bodyH = Math.max(Math.abs(yC - yO), 1);
+      ctx.fillRect(x - BAR_W/2, bodyTop, BAR_W, bodyH);
+      ctx.strokeStyle = color; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, yH); ctx.lineTo(x, bodyTop);
+      ctx.moveTo(x, bodyTop + bodyH); ctx.lineTo(x, yL);
+      ctx.stroke();
+    }
+
+    // 缺口显示（仅原始K线模式，与通达信一致）
+    // 缺口在被回补之前一直向右延伸，而非只画在两根K之间
+    // 注意：必须使用 allKlines 的原始 OHLC，不能用 snap.klines 的 h/l（那是缠论合并后的值）
+    const visEnd = Math.min(visLast, klines.length - 1);
+    for (let i = Math.max(visFirst, 1); i <= visEnd; i++) {
+      const prevRaw = allKlines[rangeStart + i - 1]; if (!prevRaw) continue;
+      const curRaw = allKlines[rangeStart + i]; if (!curRaw) continue;
+      const prevLow = prevRaw.l, prevHigh = prevRaw.h;
+      const curLow = curRaw.l, curHigh = curRaw.h;
+
+      let gapType = null, gapTop, gapBot;
+      if (prevLow > curHigh) {
+        // 向下缺口：缺口区间 [curHigh, prevLow]
+        gapType = 'down'; gapTop = prevLow; gapBot = curHigh;
+      } else if (prevHigh < curLow) {
+        // 向上缺口：缺口区间 [prevHigh, curLow]
+        gapType = 'up'; gapTop = curLow; gapBot = prevHigh;
+      }
+      if (!gapType) continue;
+
+      // 从缺口位置向右扫描，检测缺口是否已被回补
+      // 向下缺口 [gapBot, gapTop]：后续某根K的 high >= gapTop → 回补
+      // 向上缺口 [gapBot, gapTop]：后续某根K的 low <= gapBot → 回补
+      let closed = false;
+      for (let j = i + 1; j <= visEnd; j++) {
+        const k = allKlines[rangeStart + j]; if (!k) break;
+        if (gapType === 'down' && k.h >= gapTop) { closed = true; break; }
+        if (gapType === 'up' && k.l <= gapBot) { closed = true; break; }
+      }
+      // 已回补的缺口不再是缺口，跳过不画
+      if (closed) { console.log('[GAP] K'+i+' '+gapType+' closed, skip'); continue; }
+      console.log('[GAP] K'+i+' '+gapType+' ['+gapBot.toFixed(2)+','+gapTop.toFixed(2)+'] NOT closed, DRAWING x1='+xOf(i-1).toFixed(0)+' x2='+(W-PAD_R).toFixed(0));
+
+      // 未回补的缺口：从缺口位置一直延伸到画面右侧
+      const x1 = xOf(i - 1) + KW / 2;
+      const x2 = W - PAD_R;
+      const yTop = yOf(gapTop);
+      const yBot = yOf(gapBot);
+      const color = (gapType === 'down') ? [239, 83, 80] : [38, 166, 154];
+      ctx.fillStyle = `rgba(${color[0]},${color[1]},${color[2]},0.12)`;
+      ctx.fillRect(x1, yBot, x2 - x1, yTop - yBot);
+      // 缺口边界虚线（上边和下边）
+      ctx.strokeStyle = `rgba(${color[0]},${color[1]},${color[2]},0.4)`;
+      ctx.lineWidth = 1; ctx.setLineDash([3, 2]);
+      ctx.beginPath(); ctx.moveTo(x1, yTop); ctx.lineTo(x2, yTop); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1, yBot); ctx.lineTo(x2, yBot); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  // 均线 (MA5/MA10/MA20/MA34/MA60)
+  if (layers.ma) {
+    const maPeriods = [5, 10, 20, 34, 60];
+    const maColors = ['#e1e4e8', '#ffb74d', '#4fc3f7', '#ab47bc', '#66bb6a'];
+    ctx.lineWidth = 1;
+    for (let mi = 0; mi < maPeriods.length; mi++) {
+      const period = maPeriods[mi];
+      ctx.strokeStyle = maColors[mi];
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      let started = false;
+      for (let i = visFirst; i <= Math.min(visLast, klines.length - 1); i++) {
+        const globalIdx = rangeStart + i;
+        if (globalIdx < period - 1) continue; // 不足 period 根，跳过
+        // 计算收盘价均值
+        let sum = 0;
+        let valid = true;
+        for (let j = 0; j < period; j++) {
+          const k = allKlines[globalIdx - j];
+          if (!k) { valid = false; break; }
+          sum += k.c;
+        }
+        if (!valid) continue;
+        const ma = sum / period;
+        const x = xOf(i);
+        const y = yOf(ma);
+        if (!started) { ctx.moveTo(x, y); started = true; }
+        else { ctx.lineTo(x, y); }
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+  }
+
+  // 分型（最底层）
+  if (layers.fractal) {
+    ctx.font = '8px sans-serif';
+    ctx.textAlign = 'center';
+    snap.fractals.forEach(f => {
+      const idx = f[0], dir = f[1], k = klines[idx];
+      if (!k || idx < visFirst || idx > visLast) return;
+      const x = xOf(idx);
+      if (dir > 0) {
+        const y = yOf(k.mh);
+        ctx.fillStyle = '#ff9800'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+        ctx.textBaseline = 'bottom'; ctx.fillText('顶', x, y - 4);
+      } else {
+        const y = yOf(k.ml);
+        ctx.fillStyle = '#2196f3'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+        ctx.textBaseline = 'top'; ctx.fillText('底', x, y + 4);
+      }
+    });
+  }
+
+  // 中枢 (笔=COLORMAGENTA, 线段=COLORYELLOW) — 先画中枢，再画笔/线段，确保笔/线段在上层可被点击
+  if (layers.pivot) drawPivots(snap.pivots, xOf, yOf, '255,0,255', 1.5, visFirst, visLast);
+  if (layers.segpivot) drawPivots(snap.seg_pivots, xOf, yOf, '255,255,0', 2.5, visFirst, visLast);
+  // 价格标签收集器（带优先级和像素位置，绘制时按视觉位置去重）
+  // 优先级：visMax/visMin=3 > 线段=2 > 笔=1
+  // 数据结构：{ below: [{idx, x, y, label, color, priority}], above: [...] }
+  const priceCollector = { below: [], above: [] };
+  // 线段 (COLORYELLOW=#FFFF00) — 先画线段，优先级 2
+  strokeHitCache = []; // 清空命中缓存
+  if (layers.segment) drawStrokes(snap.segments, xOf, yOf, klines, '#FFFF00', 2.5, visFirst, visLast, false, null, 'segment', snap.segments);
+  // 笔 (COLORMAGENTA=#FF00FF) — 后画笔，优先级 1
+  if (layers.stroke) drawStrokes(snap.strokes, xOf, yOf, klines, '#FF00FF', 1.5, visFirst, visLast, layers.strokeprice, priceCollector, 'stroke', snap.strokes);
+  // 走势背景
+  if (layers.mv) {
+    drawMovements(snap.movements, xOf, yOf, PAD_T, H - PAD_B, visFirst, visLast);
+    drawMovements(snap.seg_movements, xOf, yOf, PAD_T, H - PAD_B, visFirst, visLast);
+  }
+  // 收集每根 K 线的信号标签，分下方（买侧）和上方（卖侧）堆叠显示，互不重叠
+  const belowLabels = new Map(); // idx -> [{label, color}]
+  const aboveLabels = new Map(); // idx -> [{label, color}]
+
+  // 买卖点（通达信公式：买=COLORWHITE=#FFFFFF, 卖=COLORGREEN=#00AA00）
+  if (layers.tp && snap && snap.tp) {
+    const tpMap = new Map();
+    snap.tp.forEach(t => tpMap.set(t.i + ':' + t.seg, t));
+    tpMap.forEach(t => {
+      if (t.i < visFirst || t.i > visLast) return;
+      const isBuy = t.d > 0;
+      const bStr = String(t.b);
+      const label = (isBuy ? bStr + 'B' : bStr + 'S') + (t.seg ? '-XD' : '');
+      const color = isBuy ? '#FFFFFF' : '#00AA00';
+      const map = isBuy ? belowLabels : aboveLabels;
+      if (!map.has(t.i)) map.set(t.i, []);
+      map.get(t.i).push({ label, color });
+    });
+  }
+
+  // 中枢背驰（底背驰=COLORWHITE下方, 顶背驰=COLORGREEN上方, 盘整背驰=COLORYELLOW）
+  if (layers.div && snap && snap.divs) {
+    snap.divs.forEach(d => {
+      if (d.kind === 'macd') return; // MACD背离由 L-macd 单独控制
+      if (d.i < visFirst || d.i > visLast) return;
+      const isBottom = d.d > 0;
+      const xdSuffix = d.seg ? '-XD' : '';
+      let label, color;
+      if (d.kind === 'consolidation') {
+        label = '盘整背驰' + xdSuffix;
+        if (d.s) label += '(' + d.s + ')';
+        color = '#FFFF00';
+      } else {
+        label = (isBottom ? '底背驰' : '顶背驰') + xdSuffix;
+        if (d.s) label += '(' + d.s + ')';
+        color = isBottom ? '#FFFFFF' : '#00AA00';
+      }
+      const map = isBottom ? belowLabels : aboveLabels;
+      if (!map.has(d.i)) map.set(d.i, []);
+      map.get(d.i).push({ label, color });
+    });
+  }
+
+  // MACD背离（底背=COLORWHITE下方, 顶背=COLORGREEN上方）
+  if (layers.macd && snap && snap.divs) {
+    snap.divs.forEach(d => {
+      if (d.kind !== 'macd') return;
+      if (d.i < visFirst || d.i > visLast) return;
+      const isBottom = d.d > 0;
+      let label = 'MACD' + (isBottom ? '底背' : '顶背');
+      if (d.s) label += '(' + d.s + ')';
+      const color = isBottom ? '#FFFFFF' : '#00AA00';
+      const map = isBottom ? belowLabels : aboveLabels;
+      if (!map.has(d.i)) map.set(d.i, []);
+      map.get(d.i).push({ label, color });
+    });
+  }
+
+  // 计算可见区域最高/最低价，优先级最高（3），覆盖同位置的笔/线段端点
+  {
+    let visMax = -Infinity, visMin = Infinity;
+    let visMaxIdx = -1, visMinIdx = -1;
+    for (let i = visFirst; i <= Math.min(visLast, klines.length - 1); i++) {
+      const k = klines[i]; if (!k) continue;
+      if (k.mh > visMax) { visMax = k.mh; visMaxIdx = i; }
+      if (k.ml < visMin) { visMin = k.ml; visMinIdx = i; }
+    }
+    if (visMaxIdx >= 0) priceCollector.above.push({ idx: visMaxIdx, x: xOf(visMaxIdx), y: yOf(klines[visMaxIdx].mh), label: visMax.toFixed(2), color: '#26a69a', priority: 3 });
+    if (visMinIdx >= 0) priceCollector.below.push({ idx: visMinIdx, x: xOf(visMinIdx), y: yOf(klines[visMinIdx].ml), label: visMin.toFixed(2), color: '#ef5350', priority: 3 });
+  }
+
+  // 按视觉位置去重：同方向（above/below）内，如果两个标签的 x 像素距离 <= 3px 且 y 像素距离 <= 12px，
+  // 只保留优先级高的；优先级相同时保留先加入的（线段先于笔）
+  function dedupByPosition(arr) {
+    const result = [];
+    for (const item of arr) {
+      let dominated = false;
+      for (let j = 0; j < result.length; j++) {
+        const ex = result[j];
+        if (Math.abs(ex.x - item.x) <= 3 && Math.abs(ex.y - item.y) <= 12) {
+          // 位置重叠：保留优先级高的
+          if (item.priority > ex.priority) {
+            result[j] = item; // 替换为高优先级的
+          }
+          // 不管谁赢，当前 item 都被处理了（要么被丢弃，要么替换了已有的）
+          dominated = true;
+          break;
+        }
+      }
+      if (!dominated) result.push(item);
+    }
+    return result;
+  }
+  priceCollector.below = dedupByPosition(priceCollector.below);
+  priceCollector.above = dedupByPosition(priceCollector.above);
+
+  // 把去重后的数组转为 Map<idx, {label, color}> 供堆叠绘制使用
+  const priceBelowMap = new Map();
+  priceCollector.below.forEach(p => { if (!priceBelowMap.has(p.idx)) priceBelowMap.set(p.idx, { label: p.label, color: p.color }); });
+  const priceAboveMap = new Map();
+  priceCollector.above.forEach(p => { if (!priceAboveMap.has(p.idx)) priceAboveMap.set(p.idx, { label: p.label, color: p.color }); });
+
+  // 堆叠绘制：价格最靠近 K 线，然后是信号标签，无占位空行
+  const STACK_GAP = 12;   // 每行间距（px）
+  const STACK_START = 16; // 距 K 线高低点的起始偏移（textBaseline=middle，需 > 半个文字高度）
+  // 合并所有需要堆叠的 idx（价格 + 信号）
+  const allBelowIdx = new Set([...belowLabels.keys(), ...priceBelowMap.keys()]);
+  const allAboveIdx = new Set([...aboveLabels.keys(), ...priceAboveMap.keys()]);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  allBelowIdx.forEach(idx => {
+    const k = klines[idx]; if (!k) return;
+    const x = xOf(idx);
+    let y = yOf(k.ml) + STACK_START;
+    // 价格标签放最前面（最靠近 K 线）
+    const pl = priceBelowMap.get(idx);
+    if (pl) { ctx.font = 'bold 10px monospace'; ctx.fillStyle = pl.color; ctx.fillText(pl.label, x, y); y += STACK_GAP; }
+    // 信号标签
+    const sigs = belowLabels.get(idx);
+    if (sigs) { ctx.font = 'bold 9px sans-serif'; sigs.forEach(l => { ctx.fillStyle = l.color; ctx.fillText(l.label, x, y); y += STACK_GAP; }); }
+  });
+  allAboveIdx.forEach(idx => {
+    const k = klines[idx]; if (!k) return;
+    const x = xOf(idx);
+    let y = yOf(k.mh) - STACK_START;
+    const pl = priceAboveMap.get(idx);
+    if (pl) { ctx.font = 'bold 10px monospace'; ctx.fillStyle = pl.color; ctx.fillText(pl.label, x, y); y -= STACK_GAP; }
+    const sigs = aboveLabels.get(idx);
+    if (sigs) { ctx.font = 'bold 9px sans-serif'; sigs.forEach(l => { ctx.fillStyle = l.color; ctx.fillText(l.label, x, y); y -= STACK_GAP; }); }
+  });
+
+  // 回测交易标记（买入：红色▲在K线下方信号堆叠之后，卖出：绿色▼在K线上方信号堆叠之后）
+  tradeMarkers = [];
+  if (trades.length > 0) {
+    trades.forEach(t => {
+      const localIdx = t.globalIdx - rangeStart;
+      if (localIdx < visFirst || localIdx > visLast) return;
+      const k = klines[localIdx];
+      if (!k) return;
+      const x = xOf(localIdx);
+      const pctLabel = Math.round(t.pct * 100) + '%';
+      if (t.type === 'buy') {
+        const belowCnt = (belowLabels.get(localIdx) || []).length + (priceCollector.below.has(localIdx) ? 1 : 0);
+        const y = yOf(k.ml) + STACK_START + belowCnt * STACK_GAP + 6;
+        ctx.fillStyle = '#ff1744';
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x - 5, y + 8); ctx.lineTo(x + 5, y + 8);
+        ctx.closePath(); ctx.fill();
+        ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText('买 ' + pctLabel, x, y + 10);
+        tradeMarkers.push({ id: t.id, x, y: y + 4 });
+      } else {
+        const aboveCnt = (aboveLabels.get(localIdx) || []).length + (priceCollector.above.has(localIdx) ? 1 : 0);
+        const y = yOf(k.mh) - STACK_START - aboveCnt * STACK_GAP - 6;
+        ctx.fillStyle = '#00e676';
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x - 5, y - 8); ctx.lineTo(x + 5, y - 8);
+        ctx.closePath(); ctx.fill();
+        ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText('卖 ' + pctLabel, x, y - 10);
+        tradeMarkers.push({ id: t.id, x, y: y - 4 });
+      }
+    });
+  }
+
+  // 恢复裁剪区域，后续元素（指示线、X轴标签、十字架）不受限制
+  ctx.restore();
+
+  // 量能柱（底部，根据勾选成交额或成交量显示）
+  // layers.amount 优先于 layers.vol（互斥关系已在UI层保证）
+  const _volMode = layers.amount ? 'amount' : (layers.vol ? 'vol' : null);
+  if (_volMode) {
+  const _volField = _volMode === 'amount' ? 'a' : 'v';
+  let _hasVol = false, _maxVol = 0;
+  for (let i = visFirst; i <= Math.min(visLast, klines.length - 1); i++) {
+    const raw = allKlines[rangeStart + i];
+    if (raw && raw[_volField] > 0) { _hasVol = true; if (raw[_volField] > _maxVol) _maxVol = raw[_volField]; }
+  }
+  if (_hasVol && _maxVol > 0) {
+    const volTop = H - PAD_B + 4, volBot = H - 6;
+    ctx.strokeStyle = 'rgba(139,148,158,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD_L, volTop - 4); ctx.lineTo(W - PAD_R, volTop - 4); ctx.stroke();
+    ctx.fillStyle = '#8b949e'; ctx.font = '9px monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(_volMode === 'amount' ? 'AMT' : 'VOL', PAD_L + 2, volTop - 6);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(PAD_L, volTop - 2, W - PAD_L - PAD_R, volBot - volTop + 2);
+    ctx.clip();
+    for (let i = visFirst; i <= Math.min(visLast, klines.length - 1); i++) {
+      const raw = allKlines[rangeStart + i]; if (!raw || !raw[_volField]) continue;
+      const x = xOf(i);
+      const up = raw.c >= raw.o;
+      ctx.fillStyle = up ? 'rgba(38,166,154,0.75)' : 'rgba(239,83,80,0.75)';
+      const bh = Math.max(Math.round(raw[_volField] / _maxVol * (volBot - volTop)), 1);
+      ctx.fillRect(x - BAR_W/2, volBot - bh, Math.max(BAR_W, 1), bh);
+    }
+    ctx.restore();
+  }
+  }
+
+  // 当前步指示线（仅在播放时显示）
+  if (playing) {
+    ctx.strokeStyle = '#f0883e'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+    const cx = xOf(currentStep);
+    if (cx >= PAD_L && cx <= W - PAD_R) {
+      ctx.beginPath(); ctx.moveTo(cx, PAD_T); ctx.lineTo(cx, H - PAD_B); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // X轴时间标签：每周一标注 + 最后一天标注
+  if (allKlines.length > 0) {
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const lastIdx = Math.min(visLast, allKlines.length - 1 - rangeStart);
+    let lastLabelX = -Infinity; // 记录上一个已标注标签的x坐标，避免重叠
+    for (let i = visFirst; i <= lastIdx; i++) {
+      const k = allKlines[rangeStart + i];
+      if (!k) continue;
+      const x = xOf(i);
+      if (x < PAD_L || x > W - PAD_R) continue;
+      // 判断星期几
+      const p = k.d.split('/');
+      let weekday = -1;
+      if (p.length >= 3) {
+        const dt = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+        weekday = dt.getDay(); // 0=周日, 1=周一, ..., 6=周六
+      }
+      const isMonday = (weekday === 1);
+      const isLast = (i === lastIdx);
+      // 规则：标注每周一 + 最后一天
+      // 但最后一天如果是周一或周二且离上一个周一太近，则不重复标注
+      if (!isMonday && !isLast) continue;
+      if (isLast && !isMonday) {
+        // 最后一天不是周一：周二离上周一太近不标，周三及以后才标
+        if (weekday >= 1 && weekday <= 2) continue;
+      }
+      // 避免与上一个标签像素重叠
+      if (x - lastLabelX < 35) continue;
+      ctx.fillText(fmtDate(k.d), x, H - PAD_B + 4);
+      lastLabelX = x;
+    }
+  }
+
+  // 步数 + 日期 + 十字架价格信息显示在顶栏（合并到 k-info，避免单独 span 换行）
+  const kInfoEl = document.getElementById('k-info');
+  if (kInfoEl) {
+    if (crosshair.active && crosshair.kIdx >= 0 && allKlines[crosshair.kIdx]) {
+      const globalIdx = crosshair.kIdx;
+      const k = allKlines[globalIdx];
+      const localIdx = globalIdx - rangeStart;
+      const ckK = snap && snap.klines ? snap.klines[localIdx] : null;
+      if (layers.kline && ckK) {
+        kInfoEl.textContent = 'K' + globalIdx + ' ' + k.d + ' | MH=' + ckK.mh.toFixed(2) + ' ML=' + ckK.ml.toFixed(2);
+      } else {
+        kInfoEl.textContent = 'K' + globalIdx + ' ' + k.d + ' | O=' + k.o.toFixed(2) + ' H=' + k.h.toFixed(2) + ' L=' + k.l.toFixed(2) + ' C=' + k.c.toFixed(2);
+      }
+    } else {
+      kInfoEl.textContent = 'K' + (rangeStart + currentStep) + ' ' + (allKlines[rangeStart + currentStep] ? allKlines[rangeStart + currentStep].d : '');
+    }
+  }
+
+  // 均线/量能数值显示（layers 行右侧 layer-info，均线分两行，量能放第二行末尾）
+  const layerInfoEl = document.getElementById('layer-info');
+  if (layerInfoEl) {
+    const refIdx = crosshair.active && crosshair.kIdx >= 0 ? crosshair.kIdx : (rangeStart + currentStep);
+    const maParts = [];
+    if (layers.ma) {
+      const maPeriods = [5, 10, 20, 34, 60];
+      for (const p of maPeriods) {
+        if (refIdx >= p - 1) {
+          let sum = 0, valid = true;
+          for (let j = 0; j < p; j++) {
+            const k = allKlines[refIdx - j];
+            if (!k) { valid = false; break; }
+            sum += k.c;
+          }
+          if (valid) maParts.push(p + ':' + (sum / p).toFixed(2));
+        }
+      }
+    }
+    let volStr = '';
+    if (layers.amount) {
+      // 成交额(元)：≥1万亿显示"X.XX万亿"，≥1亿显示"X.XX亿"，≥1万显示"X.XX万"
+      const k = allKlines[refIdx];
+      if (k && k.a > 0) {
+        const amt = k.a;
+        if (amt >= 1e12) volStr = 'A:' + (amt / 1e12).toFixed(2) + '万亿';
+        else if (amt >= 1e8) volStr = 'A:' + (amt / 1e8).toFixed(2) + '亿';
+        else if (amt >= 1e4) volStr = 'A:' + (amt / 1e4).toFixed(2) + '万';
+        else volStr = 'A:' + amt.toFixed(2) + '元';
+      }
+    } else if (layers.vol) {
+      // 成交量(股→手)：÷100转手，≥1亿手显示"X.XX亿手"，≥1万手显示"X.XX万手"
+      const k = allKlines[refIdx];
+      if (k && k.v > 0) {
+        const vol = k.v / 100;  // 股→手
+        if (vol >= 100000000) volStr = 'V:' + (vol / 100000000).toFixed(2) + '亿手';
+        else if (vol >= 10000) volStr = 'V:' + (vol / 10000).toFixed(2) + '万手';
+        else volStr = 'V:' + vol.toFixed(0) + '手';
+      }
+    }
+    // 第一行: MA5 MA10 MA20; 第二行: MA34 MA60 V:xx
+    const line1 = maParts.slice(0, 3).join('  ');
+    const line2Parts = maParts.slice(3);
+    if (volStr) line2Parts.push(volStr);
+    const line2 = line2Parts.join('  ');
+    layerInfoEl.innerHTML = (line1 ? line1 : '') + (line1 && line2 ? '<br>' : '') + (line2 ? line2 : '');
+  }
+
+  // 十字架
+  if (crosshair.active && crosshair.x >= 0 && crosshair.y >= 0) {
+    ctx.strokeStyle = '#58a6ff88'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(crosshair.x, PAD_T); ctx.lineTo(crosshair.x, H - PAD_B);
+    ctx.moveTo(PAD_L, crosshair.y); ctx.lineTo(W - PAD_R, crosshair.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // 十字架交叉点小圆
+    ctx.fillStyle = '#58a6ff';
+    ctx.beginPath(); ctx.arc(crosshair.x, crosshair.y, 2, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function drawPivots(pivots, xOf, yOf, rgb, borderW, vf, vl) {
+  pivots.forEach(p => {
+    if (p.e < vf || p.s > vl) return;
+    const x1 = xOf(p.s), x2 = xOf(p.e);
+    const yZG = yOf(p.zg), yZD = yOf(p.zd);
+    ctx.fillStyle = 'rgba(' + rgb + ',0.3)';
+    ctx.fillRect(x1, yZG, x2 - x1, yZD - yZG);
+    ctx.strokeStyle = 'rgba(' + rgb + ',0.7)'; ctx.lineWidth = borderW;
+    ctx.beginPath();
+    ctx.moveTo(x1, yZG); ctx.lineTo(x2, yZG);
+    ctx.moveTo(x1, yZD); ctx.lineTo(x2, yZD);
+    ctx.moveTo(x1, yZG); ctx.lineTo(x1, yZD);
+    ctx.moveTo(x2, yZG); ctx.lineTo(x2, yZD);
+    ctx.stroke();
+  });
+}
+
+function drawStrokes(strokes, xOf, yOf, klines, color, lw, vf, vl, showPrice, priceCollector, hitType, hitSource) {
+  strokes.forEach((s, i) => {
+    if (s.e < vf || s.s > vl) return;
+    const k1 = klines[s.s], k2 = klines[s.e];
+    if (!k1 || !k2) return;
+    const x1 = xOf(s.s), x2 = xOf(s.e);
+    const isUp = s.d > 0;
+    // 使用 WASM 返回的笔高低点
+    const y1 = isUp ? yOf(s.l) : yOf(s.h);
+    const y2 = isUp ? yOf(s.h) : yOf(s.l);
+    ctx.strokeStyle = color; ctx.lineWidth = lw;
+    // 待定笔用虚线，确认笔和虚拟笔用实线
+    if (s.st === 'pending') { ctx.setLineDash([4, 3]); } else { ctx.setLineDash([]); }
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.setLineDash([]);
+    // 缓存命中检测数据
+    if (hitType && hitSource) {
+      strokeHitCache.push({ type: hitType, idx: i, x1, y1, x2, y2 });
+    }
+    // 标注端点价格（仅笔标注，线段端点即笔端点不重复标注）
+    if (showPrice) {
+      const price1 = isUp ? s.l : s.h;
+      const price2 = isUp ? s.h : s.l;
+      if (priceCollector) {
+        // 收集价格标签（数组形式，附带优先级和像素位置）
+        // 线段优先级=2，笔优先级=1
+        const priority = (color === '#FFFF00') ? 2 : 1;
+        // 起点：上涨笔在下方，下跌笔在上方
+        const startArr = isUp ? priceCollector.below : priceCollector.above;
+        startArr.push({ idx: s.s, x: x1, y: y1, label: price1.toFixed(2), color, priority });
+        // 终点：上涨笔在上方，下跌笔在下方
+        const endArr = isUp ? priceCollector.above : priceCollector.below;
+        endArr.push({ idx: s.e, x: x2, y: y2, label: price2.toFixed(2), color, priority });
+      } else {
+        ctx.fillStyle = color; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+        // 起点价格：上涨笔在下方，下跌笔在上方
+        ctx.textBaseline = isUp ? 'top' : 'bottom';
+        ctx.fillText(price1.toFixed(2), x1, y1 + (isUp ? 4 : -4));
+        // 终点价格：上涨笔在上方，下跌笔在下方
+        ctx.textBaseline = isUp ? 'bottom' : 'top';
+        ctx.fillText(price2.toFixed(2), x2, y2 + (isUp ? -4 : 4));
+      }
+    }
+  });
+}
+
+function drawMovements(movements, xOf, yOf, top, bot, vf, vl) {
+  movements.forEach(m => {
+    if (m.e < vf || m.s > vl) return;
+    const x1 = xOf(m.s), x2 = xOf(m.e);
+    const colors = {1:'rgba(38,166,154,0.05)', '-1':'rgba(239,83,80,0.05)', 0:'rgba(255,193,7,0.03)'};
+    ctx.fillStyle = colors[m.t] || colors[0];
+    ctx.fillRect(x1, top, x2 - x1, bot - top);
+    const label = m.t === 1 ? '↑' : m.t === -1 ? '↓' : '~';
+    ctx.fillStyle = m.t === 1 ? '#26a69a' : m.t === -1 ? '#ef5350' : '#ffc107';
+    ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(label + (m.pc > 0 ? '(' + m.pc + ')' : ''), (x1 + x2) / 2, top + 2);
+  });
+}
+
+// ====== 统计 ======
+function updateStats() {
+  if (!hasData()) return;
+  // 统计数字始终反映整个时间范围内的识别总量，不受 currentStep 影响
+  // 逐根推送模式使用最后一个快照（包含全部累计数据），整体推送模式使用 batchFullSnap
+  let s;
+  if (currentMode === 'batch' && batchFullSnap) {
+    s = batchFullSnap;
+  } else if (snapshots.length > 0) {
+    s = snapshots[snapshots.length - 1];
+  } else {
+    s = getCurrentSnapshot();
+  }
+  if (!s) return;
+  document.getElementById('cur-step').textContent = currentStep;
+  document.getElementById('total-steps').textContent = getTotalSteps();
+
+  // 进度条：基于 snapshots 内部步数
+  const total = getTotalSteps();
+  const cp = total > 0 ? (currentStep / total) * 100 : 0;
+  document.getElementById('pfill').style.width = cp + '%';
+  document.getElementById('pcursor').style.left = cp + '%';
+  // 范围标记基于 allKlines 全局索引
+  const allTotal = allKlines.length - 1;
+  const sp = allTotal > 0 ? (rangeStart / allTotal) * 100 : 0;
+  const ep = allTotal > 0 ? (rangeEnd / allTotal) * 100 : 100;
+  const pr = document.getElementById('prange');
+  pr.style.left = sp + '%'; pr.style.width = (ep - sp) + '%';
+  // 更新交易信息（浮动盈亏随当前价格变化）
+  updateTradeInfo();
+}
+
+// ====== 范围滑块 ======
+function updateRangeSlider() {
+  const total = allKlines.length - 1;
+  const sp = total > 0 ? (rangeStart / total) * 100 : 0;
+  const ep = total > 0 ? (rangeEnd / total) * 100 : 100;
+  document.getElementById('handle-start').style.left = sp + '%';
+  document.getElementById('handle-end').style.left = ep + '%';
+  document.getElementById('label-start').textContent = allKlines[rangeStart] ? allKlines[rangeStart].d : '--';
+  document.getElementById('label-end').textContent = allKlines[rangeEnd] ? allKlines[rangeEnd].d : '--';
+  const fill = document.getElementById('range-fill');
+  fill.style.left = sp + '%';
+  fill.style.width = (ep - sp) + '%';
+}
+
+let activeHandle = null;
+const slider = document.getElementById('range-slider');
+
+function handlePosFromEvent(e) {
+  const rect = slider.querySelector('.range-track').getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  return Math.round(pct * (allKlines.length - 1));
+}
+
+function onHandleStart(e, handle) {
+  e.preventDefault();
+  activeHandle = handle;
+  document.getElementById('handle-' + handle).classList.add('active');
+  document.body.style.cursor = 'grabbing';
+}
+
+function onHandleMove(e) {
+  if (!activeHandle || allKlines.length === 0) return;
+  const idx = handlePosFromEvent(e);
+  if (activeHandle === 'start') rangeStart = Math.min(idx, rangeEnd);
+  else rangeEnd = Math.max(idx, rangeStart);
+  updateRangeSlider();
+}
+
+function onHandleEnd() {
+  if (activeHandle) {
+    document.getElementById('handle-start').classList.remove('active');
+    document.getElementById('handle-end').classList.remove('active');
+    activeHandle = null;
+    document.body.style.cursor = '';
+    // 范围改变后，从新起点重新分析
+    analyzeRange();
+  }
+}
+
+// 将 calculate_zen 的 WasmOutput 转换为 StreamSnapshot 格式
+function convertWasmToSnapshot(wasmResult, count) {
+  const statusStr = s => s === 1 ? 'confirmed' : s === 2 ? 'pending' : 'virtual';
+  const klines = (wasmResult.klines || []).map(k => ({
+    i: k.index, h: k.high, l: k.low,
+    mh: k.merged_high, ml: k.merged_low, ind: k.is_independent
+  }));
+  const fractals = wasmResult.fractals || [];
+  const strokes = (wasmResult.strokes || []).map(s => ({
+    s: s.start_k, e: s.end_k, d: s.direction, h: s.high, l: s.low, st: statusStr(s.status)
+  }));
+  const segments = (wasmResult.segments || []).map(s => ({
+    s: s.start_k, e: s.end_k, d: s.direction, h: s.high, l: s.low, st: statusStr(s.status)
+  }));
+  const convertPivot = p => ({
+    s: p.start_k, e: p.end_k, zg: p.zg, zd: p.zd, gg: p.gg, dd: p.dd,
+    ext: p.extended, lvl: p.level
+  });
+  const pivots = (wasmResult.stroke_pivots || []).map(convertPivot);
+  const seg_pivots = (wasmResult.segment_pivots || []).map(convertPivot);
+  // 转换买卖信号为 StreamTP 格式（跳过背驰信号）
+  const tpMap = new Map();
+  (wasmResult.trading_signals || []).forEach(sig => {
+    if (sig.is_beichi || sig.category === 'macd') return;
+    const absType = Math.abs(sig.signal_type);
+    const seg = absType >= 100;
+    const base = seg ? absType - 100 : absType;
+    const key = sig.k_index + ':' + seg;
+    tpMap.set(key, { i: sig.k_index, p: sig.price, b: base, d: sig.direction, seg });
+  });
+  const tp = Array.from(tpMap.values());
+  // 转换背驰/背离信号为 divs 格式
+  const divs = [];
+  (wasmResult.trading_signals || []).forEach(sig => {
+    if (!sig.is_beichi) return;
+    const seg = sig.category === 'segment';
+    let kind = 'trend';
+    if (sig.text && sig.text.includes('盘整')) kind = 'consolidation';
+    divs.push({ i: sig.k_index, p: sig.price, d: sig.direction, seg, kind, s: sig.strength || '' });
+  });
+  (wasmResult.macd_divergences || []).forEach(sig => {
+    divs.push({ i: sig.k_index, p: sig.price, d: sig.direction, seg: false, kind: 'macd', s: sig.strength || '' });
+  });
+  return { step: count - 1, klines, fractals, strokes, segments, pivots, seg_pivots, tp, divs };
+}
+
+// 通用分析函数：根据 currentMode 选择整体推送或逐根推送模式
+async function analyzeRange() {
+  if (allKlines.length === 0 || !wasmReady || !wasmModule) return;
+
+  async function refreshAttestation() {
+    try {
+      const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const resp = await fetch(_apiUrl('/api/auth/session'), {
+        method: 'POST',
+        headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ nonce, app_id: 'tdx_zen', platform: 'replay' })
+      });
+      if (!resp.ok) {
+        console.error('[replay] refreshAttestation: HTTP', resp.status);
+        backendDown = false;  // 收到了 HTTP 响应，后台存活
+        return false;
+      }
+      const data = await resp.json();
+      if (data && data.success && data.attestation) {
+        const ar = wasmModule.init_auth_attestation(data.attestation, nonce, 'tdx_zen', 'replay');
+        if (ar && ar.valid) {
+          backendDown = false;
+          return true;
+        }
+        console.error('[replay] refreshAttestation: init_auth_attestation 返回 invalid', ar);
+      } else {
+        console.error('[replay] refreshAttestation: 服务器返回失败', data);
+      }
+    } catch (e) {
+      // 网络错误：后台服务器已退出或网络不可用
+      backendDown = true;
+      console.error('[replay] refreshAttestation: 后台服务器不可达:', e.message);
+      _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+    }
+    return false;
+  }
+
+  // 保存十字线状态，范围变更后尝试恢复
+  const savedCrosshairActive = crosshair.active;
+  const savedKIdx = crosshair.kIdx;
+  // 重置十字线状态，避免阻塞拖拽
+  crosshair.active = false;
+  crosshair.x = -1; crosshair.y = -1; crosshair.kIdx = -1;
+
+  snapshots = [];
+  batchFullSnap = null;
+  batchKlineCount = 0;
+  const count = rangeEnd - rangeStart + 1;
+
+  if (currentMode === 'batch') {
+    // ===== 整体推送模式：使用 calculate_zen 走整体分析路径 =====
+    wasmModule.set_processing_mode('batch');
+    const highs = new Float32Array(count);
+    const lows = new Float32Array(count);
+    const opens = new Float32Array(count);
+    const closes = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      const ki = rangeStart + i;
+      highs[i] = allKlines[ki].h;
+      lows[i] = allKlines[ki].l;
+      opens[i] = allKlines[ki].o;
+      closes[i] = allKlines[ki].c;
+    }
+    let result = wasmModule.calculate_zen(highs, lows, opens, closes, null, tdxMode);
+    if (!result) {
+      if (await refreshAttestation()) {
+        result = wasmModule.calculate_zen(highs, lows, opens, closes, null, tdxMode);
+      }
+    }
+    if (!result) {
+      if (backendDown) {
+        _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+      } else {
+        _setAuthBadge(_EC.EXPIRED);
+        _zenAutoShowAuthPanel();
+      }
+      return;
+    }
+    // calculate_zen 返回 JSON 字符串，需要解析为 JS 对象
+    try {
+      if (typeof result === 'string') result = JSON.parse(result);
+    } catch (e) {
+      console.error('整体推送分析结果 JSON 解析失败:', e);
+      _setAuthBadge(_EC.NONE, '分析结果解析失败');
+      return;
+    }
+    // 转换为 StreamSnapshot 格式并存储
+    batchFullSnap = convertWasmToSnapshot(result, count);
+    batchKlineCount = count;
+    // 恢复默认处理模式
+    wasmModule.set_processing_mode('streaming');
+  } else {
+    // ===== 逐根推送模式：使用 zen_stream_push 逐步推送 =====
+    wasmModule.set_processing_mode('streaming');
+    // 清理上一个分析会话的状态（防止切换数据文件时残留状态干扰）
+    wasmModule.zen_stream_reset();
+    let ok = wasmModule.zen_stream_init(tdxMode);
+    if (!ok) {
+      if (await refreshAttestation()) {
+        ok = wasmModule.zen_stream_init(tdxMode);
+      }
+    }
+    if (!ok) {
+      if (backendDown) {
+        _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+      } else {
+        _setAuthBadge(_EC.EXPIRED);
+        _zenAutoShowAuthPanel();
+      }
+      return;
+    }
+    for (let i = 0; i < count; i++) {
+      const ki = rangeStart + i;
+      const snap = wasmModule.zen_stream_push(allKlines[ki].h, allKlines[ki].l, allKlines[ki].c);
+      if (snap) {
+        snapshots.push(snap);
+      } else {
+        // 尝试刷新令牌后重试一次
+        if (await refreshAttestation()) {
+          const snap2 = wasmModule.zen_stream_push(allKlines[ki].h, allKlines[ki].l, allKlines[ki].c);
+          if (snap2) {
+            snapshots.push(snap2);
+            continue;
+          }
+        }
+        if (backendDown) {
+          _setAuthBadge(navigator.onLine ? _EC.BACKEND_DOWN : _EC.NETWORK_UNAVAILABLE);
+        } else {
+          _setAuthBadge(_EC.NONE); // AUTH_FAILED
+          _zenAutoShowAuthPanel();
+        }
+        break;
+      }
+    }
+  }
+
+  // 整体推送模式直接跳到最后一步，展示全部结果；重置 panOffset 让数据从最左侧开始
+  currentStep = currentMode === 'batch' ? getTotalSteps() : 0;
+  panOffset = 0;
+  clampPan();
+  playing = false;
+  setPlayIcon(true);
+  if (hasData()) {
+    resizeCanvas();
+    updateStats();
+    updateTradeButtons();
+    // 恢复十字线：如果之前的 K 线索引仍在有效范围内，重新激活十字线
+    if (savedCrosshairActive && savedKIdx >= rangeStart && savedKIdx <= rangeEnd) {
+      const localIdx = savedKIdx - rangeStart;
+      const restoreSnap = getCurrentSnapshot();
+      if (restoreSnap && restoreSnap.klines && restoreSnap.klines[localIdx]) {
+        crosshair.active = true;
+        crosshair.kIdx = savedKIdx;
+        crosshair.x = xOf(localIdx);
+        // 用收盘价（或缠K最低价）作为 y 坐标
+        const restoreK = allKlines[savedKIdx];
+        const restoreCkK = restoreSnap.klines[localIdx];
+        const [gMin, gMax] = getVisibleMinMax();
+        const restoreRange = Math.max(gMax - gMin, 0.001);
+        const H = canvas.height / dpr;
+        const restorePrice = layers.kline ? restoreCkK.ml : restoreK.c;
+        crosshair.y = PAD_T + (gMax - restorePrice) / restoreRange * (H - PAD_T - PAD_B);
+      }
+    }
+    draw();
+  }
+}
+
+document.getElementById('handle-start').addEventListener('mousedown', (e) => onHandleStart(e, 'start'));
+document.getElementById('handle-end').addEventListener('mousedown', (e) => onHandleStart(e, 'end'));
+window.addEventListener('mousemove', onHandleMove);
+window.addEventListener('mouseup', onHandleEnd);
+
+document.getElementById('pbar').addEventListener('click', (e) => {
+  if (!hasData()) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - r.left) / r.width;
+  const step = Math.round(pct * getTotalSteps());
+  seek(Math.max(0, Math.min(getTotalSteps(), step)));
+});
+
+// ====== 播放 ======
+function setPlayIcon(showPlay) {
+  document.getElementById('btn-play').textContent = showPlay ? '▶' : '⏸';
+}
+function play() {
+  // 如果已到末尾，从头开始播放；否则从当前位置继续播放
+  if (currentStep >= getTotalSteps()) {
+    currentStep = 0;
+    panOffset = currentMode === 'batch' ? 0 : rangeStart * KW;
+    clampPan();
+  }
+  playing = true;
+  setPlayIcon(false);
+  draw(); updateStats();
+  scheduleNext();
+}
+function pause() {
+  playing = false;
+  setPlayIcon(true);
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+}
+function scheduleNext() {
+  if (!playing) return;
+  playTimer = setTimeout(() => {
+    if (currentStep < getTotalSteps()) {
+      currentStep++;
+      autoScroll(); draw(); updateStats();
+      scheduleNext();
+    } else pause();
+  }, 1000 / speed);
+}
+function step(d) { pause(); currentStep = Math.max(0, Math.min(getTotalSteps(), currentStep + d)); autoScroll(); draw(); updateStats(); }
+function seek(s) { pause(); currentStep = s; autoScroll(); draw(); updateStats(); }
+
+document.getElementById('btn-play').addEventListener('click', () => playing ? pause() : play());
+document.getElementById('btn-prev').addEventListener('click', () => step(-1));
+document.getElementById('btn-next').addEventListener('click', () => step(1));
+document.getElementById('btn-first').addEventListener('click', () => seek(0));
+document.getElementById('btn-last').addEventListener('click', () => seek(getTotalSteps()));
+
+document.getElementById('speed-preset').addEventListener('change', (e) => {
+  // 显示值与实际速度映射：0.5x→2.5, 1x→5, 2x→10, 4x→20
+  const labelToSpeed = { '0.5': 2.5, '1': 5, '2': 10, '4': 20 };
+  speed = labelToSpeed[e.target.value] || 5;
+  if (playing) { clearTimeout(playTimer); scheduleNext(); }
+});
+
+// ====== K线缩放 ======
+// ZOOM_STEP: 单次缩放幅度（0.5 = 比 1 更平滑，对齐 apk 的细粒度缩放级别）
+const ZOOM_STEP = 0.5;
+function setZoom(newKW) {
+    newKW = Math.max(1, Math.min(15, newKW));
+    if (newKW === KW) return;
+    // 优先使用十字线位置作为锚点；若十字线未激活，则使用当前步进位置
+    // 这样即使没有激活十字线，缩放也会以当前 K 线位置为中心
+    let anchorLocalIdx = null, anchorScreenX = null;
+    // 十字线激活时，缩放后把十字线所在 K 平移到视口水平中心（对标 desktop 的 adjustZoomToCenter）
+    const crosshairActive = (typeof crosshair !== 'undefined' && crosshair.active && crosshair.kIdx >= 0 && allKlines[crosshair.kIdx]);
+    const centerKIdx = crosshairActive
+        ? crosshair.kIdx
+        : (rangeStart + currentStep);
+    if (centerKIdx >= 0 && centerKIdx < allKlines.length) {
+        anchorLocalIdx = currentMode === 'batch' ? centerKIdx : centerKIdx - rangeStart;
+        if (anchorLocalIdx >= 0 && !crosshairActive) anchorScreenX = xOf(anchorLocalIdx); // 非十字线场景：保持原屏幕 x 位置
+    }
+    KW = newKW;
+    BAR_W = Math.max(2, Math.round(KW * 2 / 3));
+    document.getElementById('zoom-level').textContent = (KW % 1 === 0) ? KW : KW.toFixed(1);
+    if (anchorLocalIdx != null && anchorLocalIdx >= 0) {
+        if (crosshairActive) {
+            // 十字线场景：把锚点 K 平移到视口水平中心，并同步更新十字线屏幕 x，
+            // 使十字线（仍在同一根 K 上，kIdx 不变）也显示在中间
+            const W = canvas.width / dpr;
+            const centerX = PAD_L + (W - PAD_L - PAD_R) / 2;
+            const base = currentMode === 'batch' ? 0 : rangeStart * KW;
+            panOffset = base + PAD_L + anchorLocalIdx * KW + KW / 2 - centerX;
+            clampPan();
+            // clamp 后锚点 K 的实际 x 即十字线应处的位置
+            crosshair.x = xOf(anchorLocalIdx);
+        } else if (anchorScreenX != null && anchorScreenX >= 0) {
+            // 非十字线场景：保持锚点 K 在原屏幕 x 位置
+            const newX = xOf(anchorLocalIdx);
+            panOffset += newX - anchorScreenX;
+            clampPan();
+        }
+    } else {
+        clampPan();
+    }
+    draw();
+}
+document.getElementById('btn-zoom-in').addEventListener('click', () => setZoom(KW + ZOOM_STEP));
+document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(KW - ZOOM_STEP));
+
+// ====== 模式切换 ======
+document.querySelectorAll('input[name="analyze-mode"]').forEach(radio => {
+  radio.addEventListener('change', async () => {
+    if (!radio.checked) return;
+    const newMode = radio.value;
+    if (newMode === currentMode) return;
+    // 保存切换前的位置，以便切换后恢复
+    const savedStep = currentStep;
+    const savedPanOffset = panOffset;
+    const hadData = allKlines.length > 0;
+    currentMode = newMode;
+    _saveZenConfig();
+    // 整体推送模式禁用播放控制按钮，逐根推送模式恢复
+    if (currentMode === 'batch') {
+      disablePlaybackControls();
+    } else if (authValid) {
+      enableControls();
+    }
+    if (allKlines.length > 0) {
+      await analyzeRange();
+      // 切换模式后恢复平移位置（两种模式都恢复）
+      if (hadData) {
+        if (currentMode === 'streaming' && snapshots.length > 0) {
+          currentStep = Math.min(savedStep, snapshots.length - 1);
+        }
+        panOffset = savedPanOffset;
+        clampPan();
+        updateStats();
+        draw();
+      }
+    }
+  });
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!hasData()) return;
+  switch(e.key) {
+    case ' ': e.preventDefault(); playing ? pause() : play(); break;
+    case 'ArrowLeft': e.preventDefault(); step(-1); break;
+    case 'ArrowRight': e.preventDefault(); step(1); break;
+    case 'ArrowUp': e.preventDefault(); setZoom(KW + ZOOM_STEP); break;
+    case 'ArrowDown': e.preventDefault(); setZoom(KW - ZOOM_STEP); break;
+    case '+': case '=': e.preventDefault(); setZoom(KW + ZOOM_STEP); break;
+    case '-': case '_': e.preventDefault(); setZoom(KW - ZOOM_STEP); break;
+  }
+});
+
+// ====== 十字架 ======
+const crosshair = { active: false, x: -1, y: -1, kIdx: -1 };
+// crosshair-info span removed; crosshair price info is now merged into k-info by draw()
+
+// ====== 笔/线段编号显示 ======
+const strokeInfoEl = document.getElementById('stroke-info');
+const siLabelEl = document.getElementById('si-label');
+const siNumEl = document.getElementById('si-num');
+
+// 点到线段的最短距离
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const cx = x1 + t * dx, cy = y1 + t * dy;
+  return Math.hypot(px - cx, py - cy);
+}
+
+// 双击：优先检测笔/线段命中，命中则显示编号；否则切换十字架
+cvWrap.addEventListener('dblclick', (e) => {
+  if (!hasData()) return;
+  // 先检测是否双击在笔/线段上
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  let bestHit = null, bestDist = 8; // 8px 命中半径
+  for (const h of strokeHitCache) {
+    const d = distToSegment(mx, my, h.x1, h.y1, h.x2, h.y2);
+    if (d < bestDist) { bestDist = d; bestHit = h; }
+  }
+  if (bestHit) {
+    // 显示编号
+    siLabelEl.textContent = bestHit.type === 'stroke' ? '笔 #' : '线段 #';
+    siNumEl.textContent = bestHit.idx;
+    strokeInfoEl.style.left = (mx + 10) + 'px';
+    strokeInfoEl.style.top = (my - 20) + 'px';
+    strokeInfoEl.style.display = 'block';
+    return;
+  }
+  // 未命中笔/线段，走十字架逻辑
+  crosshair.active = !crosshair.active;
+  if (!crosshair.active) {
+    crosshair.x = -1; crosshair.y = -1; crosshair.kIdx = -1;
+    draw();
+  } else {
+    updateCrosshair(e);
+  }
+});
+
+function updateCrosshair(e) {
+  if (!crosshair.active || !hasData()) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const W = canvas.width / dpr;
+  const H = canvas.height / dpr;
+  // 计算当前最后一根可见 K 线的右边缘 x 坐标，限制十字线不超过最后一根 K
+  // batch 模式: 最后一根是 rangeEnd；streaming 模式: 最后一根是 rangeStart + currentStep
+  const lastVisGlobalIdx = currentMode === 'batch'
+    ? Math.min(getTotalSteps(), rangeEnd)
+    : Math.min(rangeEnd, rangeStart + currentStep);
+  const lastVisLocalIdx = currentMode === 'batch' ? lastVisGlobalIdx : lastVisGlobalIdx - rangeStart;
+  const lastKRightEdge = xOf(lastVisLocalIdx) + KW / 2;
+  if (mx < PAD_L || mx > lastKRightEdge || my < PAD_T || my > H - PAD_B) {
+    crosshair.x = -1; crosshair.y = -1; crosshair.kIdx = -1;
+    draw();
+    return;
+  }
+  crosshair.x = mx; crosshair.y = my;
+  // 根据 x 坐标反算 K 线索引
+  // batch 模式: xOf(i) = PAD_L + i * KW + KW/2 - panOffset, 反算得到 localIdx = rawIdx
+  // streaming 模式: xOf(i) = PAD_L + (i + rangeStart) * KW + KW/2 - panOffset, 反算 rawIdx = i + rangeStart
+  const rawIdx = Math.round((mx - PAD_L + panOffset - KW/2) / KW);
+  const localIdx = currentMode === 'batch' ? rawIdx : rawIdx - rangeStart;
+  const globalIdx = rangeStart + localIdx;
+  if (globalIdx >= rangeStart && globalIdx <= lastVisGlobalIdx && allKlines[globalIdx]) {
+    crosshair.kIdx = globalIdx;
+  } else {
+    crosshair.kIdx = -1;
+  }
+  // k-info 文本由 draw() 统一更新
+  draw();
+}
+
+cvWrap.addEventListener('mousemove', (e) => {
+  if (crosshair.active) updateCrosshair(e);
+});
+
+// ====== 鼠标拖拽平移 ======
+let dragging = false, dragX = 0, dragPan = 0;
+cvWrap.addEventListener('mousedown', (e) => {
+  if (!hasData() || crosshair.active) return;
+  dragging = true; dragX = e.clientX; dragPan = panOffset;
+  cvWrap.classList.add('grabbing');
+});
+window.addEventListener('mousemove', (e) => {
+  if (!dragging || !hasData()) return;
+  panOffset = dragPan - (e.clientX - dragX);
+  clampPan(); draw();
+});
+window.addEventListener('mouseup', () => { dragging = false; cvWrap.classList.remove('grabbing'); });
+
+cvWrap.addEventListener('wheel', (e) => {
+  if (!hasData()) return;
+  e.preventDefault();
+  if (e.ctrlKey) {
+    // Ctrl+Wheel = zoom K-line width
+    setZoom(KW + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP));
+  } else {
+    // 优先用 deltaX（macOS trackpad 水平双指滑动），否则用 deltaY（鼠标滚轮/垂直滑动）
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    panOffset += delta > 0 ? KW * 5 : -KW * 5;
+    clampPan(); draw();
+  }
+}, { passive: false });
+
+// ====== 回测交易系统（百分比模式）======
+const INITIAL_CAPITAL = 100000; // 内部虚拟资金，不展示
+let trades = []; // { id, type:'buy'|'sell', pct, globalIdx, step, price, shares, date, cost }
+let position = { shares: 0, totalCost: 0, avgCost: 0 };
+let realizedPnL = 0;
+let availableCash = INITIAL_CAPITAL;
+let posPctAccum = 0; // 投入仓位：简单加减百分比（买加卖减），不通过股数×成本计算
+let tradeIdCounter = 0;
+let tradeMarkers = []; // 绘制时缓存标记位置，供点击检测
+let strokeHitCache = []; // 缓存笔/线段线段坐标，供双击命中检测: { type, idx, x1, y1, x2, y2 }
+
+function getCurrentPrice() {
+  if (!hasData()) return 0;
+  const globalIdx = rangeStart + currentStep;
+  return allKlines[globalIdx] ? allKlines[globalIdx].c : 0;
+}
+
+function getPortfolioValue() {
+  return availableCash + position.shares * getCurrentPrice();
+}
+
+function executeBuy(pct) {
+  if (!hasData() || !authValid) return;
+  const price = getCurrentPrice();
+  if (price <= 0) return;
+  if (posPctAccum + pct > 1.0) return; // 总仓位不能超过 100%（简单百分比加减，无需容差）
+  // 买入金额 = 总资金的 pct，但不能超过可用资金（亏损后可用资金可能 < INITIAL_CAPITAL）
+  const invest = Math.min(INITIAL_CAPITAL * pct, availableCash);
+  if (invest < 1) return;
+  const shares = Math.floor(invest / price);
+  if (shares <= 0) return;
+  const cost = shares * price;
+  availableCash -= cost;
+  position.totalCost += cost;
+  position.shares += shares;
+  position.avgCost = position.shares > 0 ? position.totalCost / position.shares : 0;
+  const globalIdx = rangeStart + currentStep;
+  const date = allKlines[globalIdx] ? allKlines[globalIdx].d : '';
+  trades.push({ id: ++tradeIdCounter, type: 'buy', pct, globalIdx, step: currentStep, price, shares, date, cost });
+  posPctAccum += pct;
+  updateTradeInfo(); updateTradeButtons(); draw();
+}
+
+function executeSell(pct) {
+  if (!hasData() || !authValid || position.shares <= 0) return;
+  const price = getCurrentPrice();
+  if (price <= 0) return;
+  let shares;
+  if (pct >= 1.0) {
+    // 100% 卖出 = 清空全部持仓，不按 sellCost 计算
+    shares = position.shares;
+  } else {
+    const sellCost = INITIAL_CAPITAL * pct; // 卖出目标 = 总资金的 pct（按成本计量）
+    shares = position.avgCost > 0 ? Math.floor(sellCost / position.avgCost) : 0;
+    shares = Math.min(shares, position.shares); // 安全兜底防止超卖
+  }
+  if (shares <= 0) return;
+  const revenue = shares * price;
+  realizedPnL += revenue - position.avgCost * shares;
+  availableCash += revenue;
+  position.shares -= shares;
+  position.totalCost = position.shares > 0 ? position.avgCost * position.shares : 0;
+  const globalIdx = rangeStart + currentStep;
+  const date = allKlines[globalIdx] ? allKlines[globalIdx].d : '';
+  trades.push({ id: ++tradeIdCounter, type: 'sell', pct, globalIdx, step: currentStep, price, shares, date });
+  posPctAccum = Math.max(0, posPctAccum - pct);
+  updateTradeInfo(); updateTradeButtons(); draw();
+}
+
+function executeClear() {
+  if (position.shares <= 0) return;
+  const price = getCurrentPrice();
+  if (price <= 0) return;
+  const shares = position.shares;
+  const revenue = shares * price;
+  realizedPnL += revenue - position.totalCost;
+  availableCash += revenue;
+  const globalIdx = rangeStart + currentStep;
+  const date = allKlines[globalIdx] ? allKlines[globalIdx].d : '';
+  const clearPct = posPctAccum;
+  trades.push({ id: ++tradeIdCounter, type: 'sell', pct: clearPct, globalIdx, step: currentStep, price, shares, date });
+  position.shares = 0; position.totalCost = 0; position.avgCost = 0;
+  posPctAccum = 0;
+  updateTradeInfo(); updateTradeButtons(); draw();
+}
+
+function deleteTrade(id) {
+  const idx = trades.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  trades.splice(idx, 1);
+  recalcFromTrades();
+  updateTradeInfo(); updateTradeButtons(); draw();
+}
+
+function recalcFromTrades() {
+  position = { shares: 0, totalCost: 0, avgCost: 0 };
+  realizedPnL = 0;
+  availableCash = INITIAL_CAPITAL;
+  posPctAccum = 0;
+  for (const t of trades) {
+    if (t.type === 'buy') {
+      posPctAccum += t.pct;
+      availableCash -= t.cost;
+      position.totalCost += t.cost;
+      position.shares += t.shares;
+      position.avgCost = position.shares > 0 ? position.totalCost / position.shares : 0;
+    } else {
+      const revenue = t.price * t.shares;
+      realizedPnL += revenue - position.avgCost * t.shares;
+      availableCash += revenue;
+      position.shares -= t.shares;
+      position.totalCost = position.shares > 0 ? position.avgCost * position.shares : 0;
+      posPctAccum = Math.max(0, posPctAccum - t.pct);
+    }
+  }
+}
+
+function executeResetTrades() {
+  trades = [];
+  position = { shares: 0, totalCost: 0, avgCost: 0 };
+  realizedPnL = 0;
+  availableCash = INITIAL_CAPITAL;
+  posPctAccum = 0;
+  updateTradeInfo(); updateTradeButtons(); draw();
+}
+
+function fmtPct(v) {
+  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+}
+
+function updateTradeInfo() {
+  const cur = getCurrentPrice();
+  const posVal = position.shares * cur;
+  const unrealized = posVal - position.totalCost;
+  // 投入仓位 = 简单加减百分比（买加卖减），不通过股数×成本计算
+  const posPct = posPctAccum * 100;
+  const unrealizedPct = position.totalCost > 0 ? unrealized / position.totalCost * 100 : 0;
+  const totalReturn = realizedPnL / INITIAL_CAPITAL * 100;
+  document.getElementById('pos-pct').textContent = posPct.toFixed(0) + '%';
+  const urEl = document.getElementById('pos-unrealized');
+  urEl.textContent = fmtPct(unrealizedPct);
+  urEl.className = unrealizedPct >= 0 ? 'profit' : 'loss';
+  const tEl = document.getElementById('pos-total-return');
+  tEl.textContent = fmtPct(totalReturn);
+  tEl.className = totalReturn >= 0 ? 'profit' : 'loss';
+}
+
+function updateTradeButtons() {
+  const enabled = hasData() && authValid;
+  const posPct = posPctAccum; // 0~1
+  // 买入：总仓位 + pct 不能超过 100%，且可用资金足够
+  const buyTiers = [
+    { id: 'btn-buy-25', pct: 0.25 },
+    { id: 'btn-buy-50', pct: 0.50 },
+    { id: 'btn-buy-100', pct: 1.00 }
+  ];
+  buyTiers.forEach(({ id, pct }) => {
+    // 只要有可用资金就允许买入（executeBuy 内部会 cap invest 到 availableCash）
+    document.getElementById(id).disabled = !enabled || posPct + pct > 1.0 || availableCash < 1;
+  });
+  // 卖出：pct 不能超过当前仓位（容差 0.02 容纳取整误差）
+  const sellTiers = [
+    { id: 'btn-sell-25', pct: 0.25 },
+    { id: 'btn-sell-50', pct: 0.50 },
+    { id: 'btn-sell-100', pct: 1.00 }
+  ];
+  sellTiers.forEach(({ id, pct }) => {
+    document.getElementById(id).disabled = !enabled || pct > posPct;
+  });
+  document.getElementById('btn-clear').disabled = !enabled || position.shares <= 0;
+  document.getElementById('btn-reset-trade').disabled = trades.length === 0;
+}
+
+function resetTrades() {
+  trades = [];
+  position = { shares: 0, totalCost: 0, avgCost: 0 };
+  realizedPnL = 0;
+  availableCash = INITIAL_CAPITAL;
+  updateTradeInfo();
+  updateTradeButtons();
+}
+
+// 按钮事件绑定
+document.getElementById('btn-buy-25').addEventListener('click', () => executeBuy(0.25));
+document.getElementById('btn-buy-50').addEventListener('click', () => executeBuy(0.50));
+document.getElementById('btn-buy-100').addEventListener('click', () => executeBuy(1.00));
+document.getElementById('btn-sell-25').addEventListener('click', () => executeSell(0.25));
+document.getElementById('btn-sell-50').addEventListener('click', () => executeSell(0.50));
+document.getElementById('btn-sell-100').addEventListener('click', () => executeSell(1.00));
+document.getElementById('btn-clear').addEventListener('click', executeClear);
+document.getElementById('btn-reset-trade').addEventListener('click', executeResetTrades);
+
+// 键盘快捷键：1/2/3=买入25/50/100, Q/W/E=卖出25/50/100
+document.addEventListener('keydown', (e) => {
+  if (!hasData() || !authValid) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  switch(e.key) {
+    case '1': e.preventDefault(); executeBuy(0.25); break;
+    case '2': e.preventDefault(); executeBuy(0.50); break;
+    case '3': e.preventDefault(); executeBuy(1.00); break;
+    case 'q': case 'Q': e.preventDefault(); executeSell(0.25); break;
+    case 'w': case 'W': e.preventDefault(); executeSell(0.50); break;
+    case 'e': case 'E': e.preventDefault(); executeSell(1.00); break;
+  }
+});
+
+// 点击图表中的交易标记 → 弹出确认菜单
+let pendingDeleteTradeId = null;
+const ctxMenu = document.getElementById('trade-ctx-menu');
+const canvasWrap = document.querySelector('.canvas-wrap');
+
+canvas.addEventListener('click', (e) => {
+  // 点击空白处关闭笔/线段编号显示
+  strokeInfoEl.style.display = 'none';
+  if (trades.length === 0 || tradeMarkers.length === 0) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  for (const m of tradeMarkers) {
+    const dx = mx - m.x, dy = my - m.y;
+    if (dx*dx + dy*dy < 100) { // 10px radius hit area
+      pendingDeleteTradeId = m.id;
+      ctxMenu.style.left = m.x + 'px';
+      ctxMenu.style.top = (m.y + 12) + 'px';
+      ctxMenu.style.display = 'flex';
+      return;
+    }
+  }
+  // 点击空白处关闭菜单
+  ctxMenu.style.display = 'none';
+  pendingDeleteTradeId = null;
+});
+
+document.getElementById('trade-ctx-del').addEventListener('click', () => {
+  if (pendingDeleteTradeId !== null) {
+    deleteTrade(pendingDeleteTradeId);
+    pendingDeleteTradeId = null;
+  }
+  ctxMenu.style.display = 'none';
+});
+
+document.getElementById('trade-ctx-cancel').addEventListener('click', () => {
+  pendingDeleteTradeId = null;
+  ctxMenu.style.display = 'none';
+});
+
+// 按 Esc 关闭菜单
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    pendingDeleteTradeId = null;
+    ctxMenu.style.display = 'none';
+  }
+});
+
+// ====== 初始化 ======
+resizeCanvas();
+initWasm();
+
+// ====== 退出按钮 ======
+document.getElementById('btn-close').addEventListener('click', async () => {
+  // 通知后端关闭服务器
+  try {
+    await fetch(_apiUrl('/api/stop'), { method: 'POST', keepalive: true, headers: _apiHeaders() });
+  } catch(e) { /* ignore */ }
+  // 关闭当前页面
+  setTimeout(() => {
+    window.open('', '_self');
+    window.close();
+    setTimeout(() => { window.location.replace('about:blank'); }, 120);
+  }, 200);
+});
+
+// ====== 缠论配置持久化 ======
+function _saveZenConfig() {
+  var cfg = {
+    tdxMode: tdxMode,
+    analyzeMode: currentMode,
+    layers: {}
+  };
+  for (var k in layers) cfg.layers[k] = layers[k];
+  try {
+    fetch(_apiUrl('/api/zenconfig'), {
+      method: 'POST',
+      headers: _apiHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ zenConfig: cfg })
+    }).catch(function(e) { console.log('[Zen] 保存配置失败:', e); });
+  } catch(e) { console.log('[Zen] 保存配置异常:', e); }
+}
+
+function _loadZenConfig() {
+  try {
+    fetch(_apiUrl('/api/zenconfig'), { headers: _apiHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var cfg = data && data.zenConfig;
+        if (!cfg) return;
+        var changed = false;
+        // 恢复 tdxMode
+        if (cfg.tdxMode !== undefined && cfg.tdxMode !== tdxMode) {
+          tdxMode = cfg.tdxMode;
+          modeInput.value = String(tdxMode);
+          updateModeSwitches();
+          changed = true;
+        }
+        // 恢复分析模式
+        if (cfg.analyzeMode !== undefined && cfg.analyzeMode !== currentMode) {
+          var radio = document.querySelector('input[name="analyze-mode"][value="' + cfg.analyzeMode + '"]');
+          if (radio) { radio.checked = true; currentMode = cfg.analyzeMode; changed = true; }
+        }
+        // 恢复图层开关
+        if (cfg.layers) {
+          for (var k in cfg.layers) {
+            var el = document.getElementById('L-' + k);
+            if (el && el.checked !== cfg.layers[k]) {
+              el.checked = cfg.layers[k];
+              layers[k] = cfg.layers[k];
+              changed = true;
+            }
+          }
+        }
+        console.log('[Zen] 加载配置:', JSON.stringify(cfg), 'changed=', changed);
+        if (changed) draw();
+      })
+      .catch(function(e) { console.log('[Zen] 加载配置失败:', e); });
+  } catch(e) { console.log('[Zen] 加载配置异常:', e); }
+}
+
+// 启动时加载持久化配置
+_loadZenConfig();
+</script>
+</body>
+</html>
