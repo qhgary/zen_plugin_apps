@@ -25,14 +25,27 @@ def hasReleaseSigning = releaseStoreFilePath &&
     releaseKeyPassword &&
     file(releaseStoreFilePath).exists()
 
-// 从 ../web/zen_version.js 读取 UI 版本号（与 HTML 共用同一来源）
-def versionJs = file('../../web/zen_version.js')
+// 自动检测运行环境：
+//   大仓库（zen_plugin）：android/zen_mobile/app → 4 级上是 zen_plugin，下面有 applications/
+//   独立仓库：android/zen_mobile/app → 3 级上是项目根，直接有 dist/、HQChart/ 等
+def candidateRoot = projectDir.toPath().resolve("../../../").normalize().toFile()
+def isMonorepo = new File(candidateRoot, "applications").isDirectory()
+def repoRootDir = isMonorepo ? new File(candidateRoot, "applications") : candidateRoot
+def repoRelativePath = { File target ->
+    repoRootDir.toPath().relativize(target.toPath()).toString().replace(File.separator, "/")
+}
+
+// 从 applications/VERSION 读取 UI 版本号（单一来源，与 zen_version.js 运行时解析一致）
+def versionToml = new File(repoRootDir, 'VERSION')
 def uiVersion = '1.4.8'
-if (versionJs.exists()) {
-    def line = versionJs.readLines().find { it.contains('ZEN_UI_VERSION') }
+if (versionToml.exists()) {
+    def line = versionToml.readLines().find { it.trim().startsWith('apk') && it.contains('"') }
     if (line) {
-        uiVersion = line.substring(line.indexOf('"') + 1, line.lastIndexOf('"'))
+        def m = line =~ /"([^"]+)"/
+        if (m.find()) uiVersion = m.group(1)
     }
+} else {
+    logger.warn("[Zen] VERSION file not found at ${versionToml}; falling back to ${uiVersion}")
 }
 def uiVersionCode = 18
 
@@ -145,16 +158,6 @@ androidComponents {
             output.outputFileName.set("${projectName}_${android.defaultConfig.versionName}_${date}.apk")
         }
     })
-}
-
-// 自动检测运行环境：
-//   大仓库（zen_plugin）：android/zen_mobile/app → 4 级上是 zen_plugin，下面有 applications/
-//   独立仓库：android/zen_mobile/app → 3 级上是项目根，直接有 dist/、HQChart/ 等
-def candidateRoot = projectDir.toPath().resolve("../../../").normalize().toFile()
-def isMonorepo = new File(candidateRoot, "applications").isDirectory()
-def repoRootDir = isMonorepo ? new File(candidateRoot, "applications") : candidateRoot
-def repoRelativePath = { File target ->
-    repoRootDir.toPath().relativize(target.toPath()).toString().replace(File.separator, "/")
 }
 
 def aarDistPath = "${repoRootDir}/dist/aarch64-linux-android/${zenProfile}/zen_android_api.aar"

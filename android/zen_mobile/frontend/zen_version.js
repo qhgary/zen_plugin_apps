@@ -1,4 +1,7 @@
-// zen_version.js -- APK UI version loader (synchronous XHR on file://android_asset/VERSION).
+// zen_version.js -- APK UI version loader (synchronous XHR).
+// The page is served by the local Go HTTP server (http://127.0.0.1:<port>/),
+// so VERSION must be fetched over HTTP (same origin). file://android_asset is
+// kept only as a fallback for harnesses that load the page directly from assets.
 
 (function() {
     var ZEN_TARGET_KEY = 'apk';
@@ -20,15 +23,20 @@
     }
 
     function loadUiVersion() {
-        var xhr = new XMLHttpRequest();
-        try {
-            xhr.open('GET', 'file:///android_asset/VERSION', false);
-            xhr.send();
-        } catch (e) {
-            return null;
+        var sources = ['VERSION', 'file:///android_asset/VERSION'];
+        for (var i = 0; i < sources.length; i++) {
+            var xhr = new XMLHttpRequest();
+            try {
+                xhr.open('GET', sources[i], false);
+                xhr.send();
+            } catch (e) {
+                continue;
+            }
+            if (xhr.status !== 200 && xhr.status !== 0) continue;
+            var v = parseUiVersion(xhr.responseText, ZEN_TARGET_KEY);
+            if (v) return v;
         }
-        if (xhr.status !== 200 && xhr.status !== 0) return null;
-        return parseUiVersion(xhr.responseText, ZEN_TARGET_KEY);
+        return null;
     }
 
     window.ZEN_UI_VERSION = loadUiVersion() || ZEN_VERSION_FALLBACK;
