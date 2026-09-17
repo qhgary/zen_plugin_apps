@@ -908,6 +908,21 @@ if /I "%PROFILE%"=="release" (
 
 echo -- Compiling Go desktop app...
 
+REM Force GOOS=windows for the desktop build.
+REM helper_embed_windows.go uses //go:build windows, so GOOS must be windows
+REM or the file is skipped and main.go's embeddedHelper symbol becomes undefined.
+REM A stale GOOS in the user shell (e.g. GOOS=darwin from a prior cross build)
+REM would otherwise produce a confusing "undefined: embeddedHelper" compile error.
+if /I not "%GOOS%"=="windows" (
+    if defined GOOS (
+        echo [WARN] GOOS=%GOOS% set in environment; overriding to windows for desktop build
+    ) else (
+        echo [INFO] GOOS unset; setting to windows for desktop build
+    )
+)
+set "GOOS=windows"
+set "GOARCH=amd64"
+
 REM Kill any running zen_desktop.exe so go build can overwrite the output file.
 REM On Windows, a running .exe locks the file, preventing go build from
 REM writing the new binary ("The process cannot access the file").
@@ -1211,6 +1226,21 @@ REM Must happen BEFORE Go build so the embedded HTML has obfuscated JS
 call :obfuscate_replay_html
 
 echo -- Compiling Go replay app...
+
+REM Force GOOS=windows for the replay build.
+REM helper_embed_windows.go uses //go:build windows, so GOOS must be windows
+REM or the file is skipped and main.go's embeddedHelper symbol becomes undefined.
+REM A stale GOOS in the user shell (e.g. GOOS=darwin from a prior cross build)
+REM would otherwise produce a confusing "undefined: embeddedHelper" compile error.
+if /I not "%GOOS%"=="windows" (
+    if defined GOOS (
+        echo [WARN] GOOS=%GOOS% set in environment; overriding to windows for replay build
+    ) else (
+        echo [INFO] GOOS unset; setting to windows for replay build
+    )
+)
+set "GOOS=windows"
+set "GOARCH=amd64"
 
 REM Kill any running zen_replay.exe so go build can overwrite the output file.
 taskkill /F /IM zen_replay.exe >nul 2>&1
