@@ -1,0 +1,203 @@
+{公式名称:ZEN}
+{公式类型:主图指标}
+
+{=============================================================================}
+{                           禅中看缠 (ZEN PLUGIN) 主图公式                    }
+{         默认模式 MODE: 9004 (仅拓展，缺口成笔/新笔/扩张/跨界均关闭)         }
+{=============================================================================}
+
+{=============================================================================}
+{                          绘 制 开 关 集 中 控 制 区                         }
+{-----------------------------------------------------------------------------}
+{        本区全部 7 个绘制段的显示/隐藏, 均由下方开关控制一个开关一行         }
+{  .     只需修改数值并在行情界面重新应用公式即可, 其余代码不用动             }
+{        1 = 显示该元素 (默认)      0 = 隐藏或者不绘制(效果等同整段注释掉)    }
+{=============================================================================}
+{  开关          默认                           控制内容                      }
+{-----------------------------------------------------------------------------}
+V_K_HB:=1;     {合并K线:    1=绘制缠论合并K线(原生K线涂黑+重绘), 0=恢复原始K线}
+               {            注意：当公式参数 USEORIGINALK=1 时本开关自动失效  }
+V_BI:=1;       {笔:         1=绘制确认笔(实线)+待定笔(虚线), 0=不绘制         }
+V_BI_DD:=0;    {笔端点价格: 1=每个笔端点标注价格数字, 0=隐藏(默认)            }
+V_XD:=1;       {线段:       1=绘制确认线段(实线)+待定线段(虚线), 0=不绘制     }
+V_BI_ZS:=1;    {笔中枢:     1=绘制笔中枢及其买卖点/背驰, 0=全部隐藏           }
+V_XD_ZS:=1;    {线段中枢:   1=绘制线段中枢及其买卖点/背驰, 0=全部隐藏         }
+V_MACD_BL:=1;  {MACD背离:   1=绘制MACD底背/顶背(独立于缠论,仅供参考), 0=不绘制}
+
+{=============================================================================}
+{------------------- 以上为绘制开关区, 以下为正式公式 ------------------------}
+{=============================================================================}
+
+{--- 1. 分析模式 ---}
+{ PMODE=1 逐根推送(默认) / PMODE=0 整体推送 }
+{ 在公式参数中新增 PMODE，默认值 1，通过 ALT+T 动态切换 }
+PSET:=TDXDLL2(IF(PMODE<0.5,801,800),H,C,L);
+
+{--- 2. 笔端点取价来源 (独立于 PMODE 与 MODE) ---}
+{ USEORIGINALK=0 笔端点取合并K线价格(默认) / USEORIGINALK=1 笔端点取原始K线价格 }
+{ 仅影响笔端点取价，K线合并/分型/缺口成笔判定始终用合并K；值变化后所有后续分析立即生效 }
+{ 联动规则: USEORIGINALK=1 时第 4 节缠论合并K线绘制段自动失效(无论 V_K_HB 为 0/1 都显示原生K线)，仅 USEORIGINALK=0 时 V_K_HB 才生效 }
+{ 在公式参数中新增 USEORIGINALK，默认值 0，通过 ALT+T 动态切换 }
+OKSET:=TDXDLL2(600,USEORIGINALK,C,L);
+CFG:=TDXDLL2(MODE,H,C,L);
+
+{--- 3. 基础价格单元 ---}
+{ VRANGE: 视窗可见区域的价格极差估算 }
+{ 作为所有间距/偏移计算的唯一基准，保证跨周期自适应 }
+VRANGE:=(HHV(H,120)-LLV(L,120));
+{ PX: 1像素对应的近似价格（假设视窗高度约400像素） }
+PX:=VRANGE/400;
+{ UNIT: 间距计算的标准单位，纯粹基于视窗极差 }
+{ 下限保底：当极差极小时（如停牌、极窄震荡），防止所有标注重叠 }
+UNIT:=MAX(VRANGE/100, PX*5);
+
+{--- 4. 对齐参数 ---}
+GAP:=UNIT*2.5;
+SH:=UNIT*0.8;
+{ ICON 像素中心比文字偏低，用"像素等价价格"补偿 }
+{ 不同 ICON 图形视觉重心偏差不同，分别以像素数为基准补偿 }
+ICON_ADJ_ARROW:=PX*3;
+ICON_ADJ_HAND:=PX*2;
+ICON_ADJ_TRI:=PX*8;
+
+{--- 5. 缠论合并K线 (开关 V_K_HB; USEORIGINALK=1 时自动失效) ---}
+{ USEORIGINALK=1 时笔端点画在原始K线上，合并K线与笔端点可能明显错位，故强制隐藏缠论K线(原生K线保持可见) }
+V_K_HB_EFF:=IF(USEORIGINALK<0.5,V_K_HB,0);
+{ 先将原生K线涂黑使其不可见，再在上面绘制缠论K线，注意背景色如果不是黑色，下面的颜色要改成背景色 }
+STICKLINE(V_K_HB_EFF=1 AND C>0, H, L, 2.8, 0),COLORBLACK;
+{ FUNCID=105: MERGED_LOW（符号标记独立性：正=独立, 负=被合并）}
+{ FUNCID=106: MERGED_HIGH }
+ML105:=TDXDLL2(105,H,C,L);
+MH106:=TDXDLL2(106,H,C,L);
+{ 独立合并K：MERGED_HIGH ~ MERGED_LOW，实心灰柱 }
+STICKLINE(V_K_HB_EFF=1 AND ML105>0.01, MH106, ABS(ML105), 4, 0),COLORD0D0D0;
+{ 被合并原始K：用原始H/L画虚线空心柱，确保背后K线被完整覆盖 }
+STICKLINE(V_K_HB_EFF=1 AND ML105<-0.01, H, L, 4, -1),COLORC2C2C2;
+
+{--- 6. 笔 (开关 V_BI) ---}
+R_BI:=TDXDLL2(110,H,C,L);
+R_BI_PEND:=TDXDLL2(130,H,C,L);
+BI:IF(V_BI=1 AND R_BI>0.01 AND R_BI<999999 AND R_BI_PEND<=0.5,R_BI,DRAWNULL),COLORMAGENTA,LINETHICK1;
+BI_P:IF(V_BI=1 AND R_BI>0.01 AND R_BI<999999 AND R_BI_PEND>=0.5,R_BI,DRAWNULL),COLORMAGENTA,LINETHICK1,DOTLINE;
+{ BI_Y: 不受掩码影响的笔价格，用于买卖点/背驰的 Y 坐标计算 }
+BI_Y:=IF(R_BI>0.01 AND R_BI<999999,R_BI,DRAWNULL);
+
+{--- 7. 笔端点价格 (开关 V_BI_DD, 默认 0=隐藏; 改为 1 显示) ---}
+BI_TOP:=R_BI>0.01 AND R_BI<999999 AND R_BI>REF(R_BI,1) AND R_BI>REFX(R_BI,1);
+BI_BOT:=R_BI>0.01 AND R_BI<999999 AND R_BI<REF(R_BI,1) AND R_BI<REFX(R_BI,1);
+BI_OFF:=UNIT*0.6;
+DRAWTEXT(V_BI_DD=1 AND BI_TOP, R_BI+BI_OFF, VAR2STR(R_BI, 2)),COLORMAGENTA;
+DRAWTEXT(V_BI_DD=1 AND BI_BOT, R_BI-BI_OFF, VAR2STR(R_BI, 2)),COLORMAGENTA;
+
+{--- 8. 线段 (开关 V_XD) ---}
+R_XD:=TDXDLL2(120,H,C,L);
+R_XD_PEND:=TDXDLL2(131,H,C,L);
+XD:IF(V_XD=1 AND R_XD>0.01 AND R_XD<999999 AND R_XD_PEND<=0.5,R_XD,DRAWNULL),COLORYELLOW,LINETHICK2;
+XD_P:IF(V_XD=1 AND R_XD>0.01 AND R_XD<999999 AND R_XD_PEND>=0.5,R_XD,DRAWNULL),COLORYELLOW,LINETHICK2,CIRCLEDOT;
+{ XD_Y: 不受掩码影响的线段价格，用于买卖点/背驰的 Y 坐标计算 }
+XD_Y:=IF(R_XD>0.01 AND R_XD<999999,R_XD,DRAWNULL);
+
+{--- 9. 笔中枢 (开关 V_BI_ZS) ---}
+BZG:=TDXDLL2(210,H,C,L); BZD:=TDXDLL2(211,H,C,L);
+STICKLINE(V_BI_ZS=1 AND BZG>0.01,BZG,BZD,0,-1),COLORMAGENTA;
+BI_ZD:IF(V_BI_ZS=1 AND BZD>0.01,BZD,DRAWNULL),COLORMAGENTA,DOTLINE;
+BI_ZG:IF(V_BI_ZS=1 AND BZG>0.01,BZG,DRAWNULL),COLORMAGENTA,DOTLINE;
+
+{--- 10. 线段中枢 (开关 V_XD_ZS) ---}
+XZG:=TDXDLL2(220,H,C,L); XZD:=TDXDLL2(221,H,C,L);
+XZ_S:=XZG>0.01 AND (REF(XZG,1)<=0.01 OR REF(XZG,1)!=XZG);
+XZ_E:=XZG>0.01 AND (REFX(XZG,1)<=0.01 OR REFX(XZG,1)!=XZG OR ISLASTBAR);
+STICKLINE(V_XD_ZS=1 AND (XZ_S OR XZ_E),XZG,XZD,0,-1),COLORYELLOW,LINETHICK1;
+XD_ZD:IF(V_XD_ZS=1 AND XZD>0.01,XZD,DRAWNULL),COLORYELLOW,DOTLINE;
+XD_ZG:IF(V_XD_ZS=1 AND XZG>0.01,XZG,DRAWNULL),COLORYELLOW,DOTLINE;
+
+{--- 11. 笔信号解析 ---}
+SIG:=TDXDLL2(218,H,C,L);
+TP:=MOD(ABS(SIG),100);
+BC:=INTPART(MOD(ABS(SIG),1000)/100);
+IS_BUY:=SIG>0 AND ((TP>=1 AND TP<=3) OR TP=23);
+IS_SELL:=SIG<0 AND ((TP>=1 AND TP<=3) OR TP=23);
+
+{--- 12. 笔中枢买卖点 (共用开关 V_BI_ZS) ---}
+B_BUY_Y:=BI_Y-GAP; B_SELL_Y:=BI_Y+GAP;
+
+DRAWICON(V_BI_ZS=1 AND IS_BUY,B_BUY_Y+SH+ICON_ADJ_ARROW,1);
+DRAWTEXT(V_BI_ZS=1 AND IS_BUY AND TP=1, B_BUY_Y-SH,'  1B'),COLORWHITE;
+DRAWTEXT(V_BI_ZS=1 AND IS_BUY AND TP=2, B_BUY_Y-SH,'  2B'),COLORWHITE;
+DRAWTEXT(V_BI_ZS=1 AND IS_BUY AND TP=3, B_BUY_Y-SH,'  3B'),COLORWHITE;
+DRAWTEXT(V_BI_ZS=1 AND IS_BUY AND TP=23,B_BUY_Y-SH,'  23B'),COLORWHITE;
+
+DRAWICON(V_BI_ZS=1 AND IS_SELL,B_SELL_Y+SH+ICON_ADJ_ARROW,2);
+DRAWTEXT(V_BI_ZS=1 AND IS_SELL AND TP=1, B_SELL_Y-SH,'  1S'),COLORGREEN;
+DRAWTEXT(V_BI_ZS=1 AND IS_SELL AND TP=2, B_SELL_Y-SH,'  2S'),COLORGREEN;
+DRAWTEXT(V_BI_ZS=1 AND IS_SELL AND TP=3, B_SELL_Y-SH,'  3S'),COLORGREEN;
+DRAWTEXT(V_BI_ZS=1 AND IS_SELL AND TP=23,B_SELL_Y-SH,'  23S'),COLORGREEN;
+
+{--- 13. 笔中枢趋势背驰 (共用开关 V_BI_ZS) ---}
+STR:=IF(BC=1,'(弱)',IF(BC=2,'(中)',IF(BC=3,'(强)','')));
+D_BUY_Y:=BI_Y-GAP*2.0; D_SELL_Y:=BI_Y+GAP*2.0;
+
+DRAWICON(V_BI_ZS=1 AND SIG>0 AND BC>0 AND TP>0,D_BUY_Y+SH+ICON_ADJ_HAND,11);
+DRAWTEXT(V_BI_ZS=1 AND SIG>0 AND BC>0 AND TP>0,D_BUY_Y-SH,VARCAT('   底背驰',STR)),COLORWHITE;
+DRAWICON(V_BI_ZS=1 AND SIG<0 AND BC>0 AND TP>0,D_SELL_Y+SH+ICON_ADJ_HAND,12);
+DRAWTEXT(V_BI_ZS=1 AND SIG<0 AND BC>0 AND TP>0,D_SELL_Y-SH,VARCAT('   顶背驰',STR)),COLORGREEN;
+
+{--- 14. 笔中枢盘整背驰 (共用开关 V_BI_ZS) ---}
+BZP:=ABS(SIG)>=100 AND TP=0;
+BZP_BUY:=BZP AND SIG>0;
+BZP_SELL:=BZP AND SIG<0;
+DRAWICON(V_BI_ZS=1 AND BZP_BUY AND BC>0,D_BUY_Y+SH+ICON_ADJ_HAND,11);
+DRAWTEXT(V_BI_ZS=1 AND BZP_BUY AND BC>0,D_BUY_Y-SH,VARCAT('   盘整背驰',STR)),COLORYELLOW;
+DRAWICON(V_BI_ZS=1 AND BZP_SELL AND BC>0,D_SELL_Y+SH+ICON_ADJ_HAND,12);
+DRAWTEXT(V_BI_ZS=1 AND BZP_SELL AND BC>0,D_SELL_Y-SH,VARCAT('   盘整背驰',STR)),COLORYELLOW;
+
+{--- 15. 线段中枢信号解析 ---}
+SIG_XD:=TDXDLL2(228,H,C,L);
+TP_XD:=MOD(ABS(SIG_XD),100);
+BC_XD:=INTPART(MOD(ABS(SIG_XD),1000)/100);
+IS_BUY_XD:=SIG_XD>0 AND ((TP_XD>=1 AND TP_XD<=3) OR TP_XD=23);
+IS_SELL_XD:=SIG_XD<0 AND ((TP_XD>=1 AND TP_XD<=3) OR TP_XD=23);
+
+{--- 16. 线段中枢买卖点 (共用开关 V_XD_ZS) ---}
+X_BUY_Y:=XD_Y-GAP*1.5; X_SELL_Y:=XD_Y+GAP*1.5;
+
+DRAWICON(V_XD_ZS=1 AND IS_BUY_XD,X_BUY_Y+SH+ICON_ADJ_ARROW,1);
+DRAWTEXT(V_XD_ZS=1 AND IS_BUY_XD AND TP_XD=1, X_BUY_Y-SH,'  1B-XD'),COLORWHITE;
+DRAWTEXT(V_XD_ZS=1 AND IS_BUY_XD AND TP_XD=2, X_BUY_Y-SH,'  2B-XD'),COLORWHITE;
+DRAWTEXT(V_XD_ZS=1 AND IS_BUY_XD AND TP_XD=3, X_BUY_Y-SH,'  3B-XD'),COLORWHITE;
+DRAWTEXT(V_XD_ZS=1 AND IS_BUY_XD AND TP_XD=23,X_BUY_Y-SH,'  23B-XD'),COLORWHITE;
+
+DRAWICON(V_XD_ZS=1 AND IS_SELL_XD,X_SELL_Y+SH+ICON_ADJ_ARROW,2);
+DRAWTEXT(V_XD_ZS=1 AND IS_SELL_XD AND TP_XD=1, X_SELL_Y-SH,'  1S-XD'),COLORGREEN;
+DRAWTEXT(V_XD_ZS=1 AND IS_SELL_XD AND TP_XD=2, X_SELL_Y-SH,'  2S-XD'),COLORGREEN;
+DRAWTEXT(V_XD_ZS=1 AND IS_SELL_XD AND TP_XD=3, X_SELL_Y-SH,'  3S-XD'),COLORGREEN;
+DRAWTEXT(V_XD_ZS=1 AND IS_SELL_XD AND TP_XD=23,X_SELL_Y-SH,'  23S-XD'),COLORGREEN;
+
+{--- 17. 线段中枢趋势背驰 (共用开关 V_XD_ZS) ---}
+STR_XD:=IF(BC_XD=1,'(弱)',IF(BC_XD=2,'(中)',IF(BC_XD=3,'(强)','')));
+DX_BUY_Y:=XD_Y-GAP*2.5; DX_SELL_Y:=XD_Y+GAP*2.5;
+
+DRAWICON(V_XD_ZS=1 AND SIG_XD>0 AND BC_XD>0 AND TP_XD>0,DX_BUY_Y+SH+ICON_ADJ_HAND,11);
+DRAWTEXT(V_XD_ZS=1 AND SIG_XD>0 AND BC_XD>0 AND TP_XD>0,DX_BUY_Y-SH,VARCAT('   底背驰-XD',STR_XD)),COLORWHITE;
+DRAWICON(V_XD_ZS=1 AND SIG_XD<0 AND BC_XD>0 AND TP_XD>0,DX_SELL_Y+SH+ICON_ADJ_HAND,12);
+DRAWTEXT(V_XD_ZS=1 AND SIG_XD<0 AND BC_XD>0 AND TP_XD>0,DX_SELL_Y-SH,VARCAT('   顶背驰-XD',STR_XD)),COLORGREEN;
+
+{--- 18. 线段中枢盘整背驰 (共用开关 V_XD_ZS) ---}
+BZP_XD:=ABS(SIG_XD)>=100 AND TP_XD=0;
+BZP_XD_BUY:=BZP_XD AND SIG_XD>0;
+BZP_XD_SELL:=BZP_XD AND SIG_XD<0;
+DRAWICON(V_XD_ZS=1 AND BZP_XD_BUY AND BC_XD>0,DX_BUY_Y+SH+ICON_ADJ_HAND,11);
+DRAWTEXT(V_XD_ZS=1 AND BZP_XD_BUY AND BC_XD>0,DX_BUY_Y-SH,VARCAT('   盘整背驰-XD',STR_XD)),COLORYELLOW;
+DRAWICON(V_XD_ZS=1 AND BZP_XD_SELL AND BC_XD>0,DX_SELL_Y+SH+ICON_ADJ_HAND,12);
+DRAWTEXT(V_XD_ZS=1 AND BZP_XD_SELL AND BC_XD>0,DX_SELL_Y-SH,VARCAT('   盘整背驰-XD',STR_XD)),COLORYELLOW;
+
+{--- 19. MACD背离 (开关 V_MACD_BL, 独立于缠论，仅供参考，不要跟缠论的背驰混淆) ---}
+M_DIV:=TDXDLL2(301,H,C,L);
+BC_M:=MOD(ABS(M_DIV),10);
+STR_M:=IF(BC_M=1,'(弱)',IF(BC_M=2,'(中)',IF(BC_M=3,'(强)','')));
+M_BUY_Y:=L-GAP*3.0; M_SELL_Y:=H+GAP*3.0;
+
+DRAWICON(V_MACD_BL=1 AND M_DIV>=10,M_BUY_Y+SH+ICON_ADJ_TRI,38);
+DRAWTEXT(V_MACD_BL=1 AND M_DIV>=10,M_BUY_Y-SH,VARCAT('   MACD底背',STR_M)),COLORWHITE;
+DRAWICON(V_MACD_BL=1 AND M_DIV<=-10,M_SELL_Y+SH+ICON_ADJ_TRI,39);
+DRAWTEXT(V_MACD_BL=1 AND M_DIV<=-10,M_SELL_Y-SH,VARCAT('   MACD顶背',STR_M)),COLORGREEN;
