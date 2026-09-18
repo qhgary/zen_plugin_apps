@@ -1,0 +1,17 @@
+# applications/VERSION -- UI version single source of truth (open-source side).
+#
+# This file is the canonical source for the three open-source UI version
+# numbers (desktop, APK, replay) and the JS-obfuscation seed.
+#
+# Updating any value below:
+#   - does NOT require re-compiling closed-source artifacts (DLL / WASM / AAR)
+#   - triggers JS-obfuscation incremental rebuild for the affected target only
+#   - is consumed at build time by applications/build.sh
+#
+# Format: TOML, parsed with grep/cut/sed (no third-party dependency).
+# See _inject_ui_versions() and obf_seed() in applications/build.sh.
+
+[ui]
+desktop = "1.4.8" # zen_desktop UI  -> zen.html :: ZEN_UI_VERSION
+apk     = "1.4.8" # APK UI          -> zen_version.js :: ZEN_UI_VERSION + Gradle versionName
+replay  = "1.3.0" # Replay UI       -> replay.html :: ZEN_REPLAY_VERSION
