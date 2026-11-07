@@ -1,0 +1,28 @@
+version: 2
+run:
+  timeout: 5m
+  tests: false
+
+linters-settings:
+  errcheck:
+    check-type-assertion: true
+  gosimple:
+    checks: ["all"]
+  govet:
+    check-shadowing: true
+  staticcheck:
+    checks: ["all"]
+  unused:
+    checks: ["all"]
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - staticcheck
+    - unused
+
+issues:
+  exclude-use-default: false
