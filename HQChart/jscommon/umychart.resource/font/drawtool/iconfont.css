@@ -1,0 +1,315 @@
+@font-face {
+  font-family: "hqchart_drawtool"; /* Project id 4529603 */
+  src: url('iconfont.woff2?t=1757923987174') format('woff2'),
+       url('iconfont.woff?t=1757923987174') format('woff'),
+       url('iconfont.ttf?t=1757923987174') format('truetype');
+}
+
+.hqchart_drawtool {
+  font-family: "hqchart_drawtool" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-Vector:before {
+  content: "\e624";
+}
+
+.icon-zitiyanse1:before {
+  content: "\ec85";
+}
+
+.icon-kuazhouqi:before {
+  content: "\e647";
+}
+
+.icon-chart-long-position:before {
+  content: "\e73a";
+}
+
+.icon-chart-short-position:before {
+  content: "\e73b";
+}
+
+.icon-tubiao_gudingfanweichengjiaoliangfenbutu:before {
+  content: "\e79e";
+}
+
+.icon-zoomout:before {
+  content: "\e897";
+}
+
+.icon-zoomin:before {
+  content: "\e898";
+}
+
+.icon-bianji:before {
+  content: "\e651";
+}
+
+.icon-unlock:before {
+  content: "\e7fa";
+}
+
+.icon-lock:before {
+  content: "\e7fb";
+}
+
+.icon-big_arrow:before {
+  content: "\e6a5";
+}
+
+.icon-bottom-arrow-solid:before {
+  content: "\e60d";
+}
+
+.icon-biankuang:before {
+  content: "\e707";
+}
+
+.icon-tubiao_shuipingshexian:before {
+  content: "\e79b";
+}
+
+.icon-qushixianjiaodu:before {
+  content: "\e60c";
+}
+
+.icon-infoline:before {
+  content: "\e64a";
+}
+
+.icon-zitibeijingse:before {
+  content: "\e656";
+}
+
+.icon-tuodong:before {
+  content: "\e6ff";
+}
+
+.icon-jiance:before {
+  content: "\e936";
+}
+
+.icon-tubiao_shizixian:before {
+  content: "\e79d";
+}
+
+.icon-xifu:before {
+  content: "\e71b";
+}
+
+.icon-maodianwenzi:before {
+  content: "\e62e";
+}
+
+.icon-maodian:before {
+  content: "\e6db";
+}
+
+.icon-feibonaqisuduzulishan:before {
+  content: "\e620";
+}
+
+.icon-feibonaqihuiche:before {
+  content: "\e621";
+}
+
+.icon-feibonaqiqixing:before {
+  content: "\e622";
+}
+
+.icon-feibonaqizhouqixian:before {
+  content: "\e662";
+}
+
+.icon-jiangenjiaoduxian:before {
+  content: "\e619";
+}
+
+.icon-GoldenSection:before {
+  content: "\e601";
+}
+
+.icon-PercentageLine:before {
+  content: "\e603";
+}
+
+.icon-a-xiangpicachuxiangpica:before {
+  content: "\e60b";
+}
+
+.icon-jiagefanwei:before {
+  content: "\e618";
+}
+
+.icon-shijianfanwei:before {
+  content: "\e61f";
+}
+
+.icon-buxiangjiaojiao:before {
+  content: "\e617";
+}
+
+.icon-tubiao_buxiangjiaotongdao:before {
+  content: "\e79c";
+}
+
+.icon-drawicon_1:before {
+  content: "\e660";
+}
+
+.icon-drawicon_2:before {
+  content: "\e661";
+}
+
+.icon-tooltiptext:before {
+  content: "\eb0f";
+}
+
+.icon-Tooltip:before {
+  content: "\e62f";
+}
+
+.icon-fangkuai:before {
+  content: "\e600";
+}
+
+.icon-draw_quadrangle:before {
+  content: "\e62c";
+}
+
+.icon-arrow:before {
+  content: "\e7e3";
+}
+
+.icon-draw_arc:before {
+  content: "\e602";
+}
+
+.icon-draw_line:before {
+  content: "\e605";
+}
+
+.icon-draw_rays:before {
+  content: "\e606";
+}
+
+.icon-rectangle:before {
+  content: "\e607";
+}
+
+.icon-draw_parallel_lines:before {
+  content: "\e608";
+}
+
+.icon-setting:before {
+  content: "\e609";
+}
+
+.icon-recycle_bin:before {
+  content: "\e60a";
+}
+
+.icon-draw_trendline:before {
+  content: "\e60e";
+}
+
+.icon-draw_goldensection:before {
+  content: "\e60f";
+}
+
+.icon-draw_gannfan:before {
+  content: "\e610";
+}
+
+.icon-draw_percentage:before {
+  content: "\e611";
+}
+
+.icon-draw_waveband:before {
+  content: "\e612";
+}
+
+.icon-draw_resline:before {
+  content: "\e613";
+}
+
+.icon-draw_text:before {
+  content: "\e614";
+}
+
+.icon-draw_parallelchannel:before {
+  content: "\e615";
+}
+
+.icon-draw_wavemw:before {
+  content: "\e616";
+}
+
+.icon-draw_triangle:before {
+  content: "\e61a";
+}
+
+.icon-draw_pricechannel:before {
+  content: "\e61b";
+}
+
+.icon-draw_circle:before {
+  content: "\e61c";
+}
+
+.icon-draw_symangle:before {
+  content: "\e61d";
+}
+
+.icon-draw_hline:before {
+  content: "\e61e";
+}
+
+.icon-linear_1:before {
+  content: "\e657";
+}
+
+.icon-linear_2:before {
+  content: "\e659";
+}
+
+.icon-linear_3:before {
+  content: "\e65a";
+}
+
+.icon-ruler:before {
+  content: "\e65b";
+}
+
+.icon-price_line:before {
+  content: "\e65c";
+}
+
+.icon-vertical_line:before {
+  content: "\e65d";
+}
+
+.icon-waveruler:before {
+  content: "\e65e";
+}
+
+.icon-draw_box:before {
+  content: "\e65f";
+}
+
+.icon-draw_head_shoulders_bt:before {
+  content: "\e6a0";
+}
+
+.icon-draw_p_rays_lines:before {
+  content: "\e6a1";
+}
+
+.icon-draw_hlinesegment:before {
+  content: "\e6a2";
+}
+
