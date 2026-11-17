@@ -1,0 +1,49 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "worker": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "script"
+  },
+  "globals": {
+    "Guid": "readonly",
+    "JSChart": "readonly",
+    "ChartData": "readonly",
+    "IFrameSplitOperator": "readonly",
+    "MARKET_SUFFIX_NAME": "readonly",
+    "REPORT_COLUMN_ID": "readonly",
+    "TREPORT_COLUMN_ID": "readonly",
+    "_EC": "readonly",
+    "_mapEc": "readonly",
+    "needsNativeDialog": "readonly"
+  },
+  "rules": {
+    // 页面里的 .js 是经典脚本（<script src>），顶层声明跨文件共享，
+    // eslint 逐文件分析看不到 → 只报函数作用域内的未使用变量
+    "no-unused-vars": ["error", { "vars": "local", "args": "after-used" }]
+  },
+  "ignorePatterns": [
+    "**/node_modules/",
+    "**/dist/",
+    "**/HQChart/",
+    "**/jscommon/",
+    "**/umychart*.js",
+    "**/*.min.js",
+    "**/app/build/",
+    "**/src/main/assets/",
+    "**/pkg/",
+    "android/zen_mobile/frontend/zen_analysis_worker.js"
+  ],
+  "overrides": [
+    {
+      // 桌面/回放端的 WASM worker 是 ESM（import tdx_zen_bg.js）
+      "files": ["**/zen_analysis_worker.js"],
+      "parserOptions": { "sourceType": "module" }
+    }
+  ]
+}

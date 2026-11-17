@@ -1,0 +1,104 @@
+# 本目录保留一份独立的行尾规则，改动请与仓库根同步。
+
+# ============================================================
+# 行尾策略
+#
+# 刻意**不写** `* text=auto`：仓库里 .js/.css/.txt/.md 混着 CRLF 与 LF，
+# 一旦开自动规范化，下次 `git add` 会把上百个文件的 blob 改写，制造一次
+# 纯行尾的巨大提交，还会让 `git show HEAD:<file>` 与磁盘字节不一致——
+# 而 build 脚本的验证流程靠字节比对（`file <f>`）。
+#
+# 两条原则：
+#   1. 已经在用的形态原样锁住（`-text` = git 永不改写这些文件的字节）；
+#   2. 只对"实测全部同一形态"的类别声明 eol，防止另一头被
+#      core.autocrlf / 跨系统 clone 翻掉（AGENTS 记过 LF .bat 在
+#      PowerShell 调度下整脚本跑不起来的事故）。
+# 新增规则前先跑：git ls-files -z '*.bat' | xargs -0 -I{} sh -c
+# 'printf "%s " "{}"; file "{}"' —— 类别内形态不一致就只能用 -text。
+# ============================================================
+
+# ---------- Windows 侧执行件：字节原样，绝不换行 ----------
+# .bat 必须是 CRLF（cmd.exe 对纯 LF 有解析边界问题）；.tn6/.ini/.dsp/.dsw/.sln
+# 由通达信与老 VS 工程读取，同样不许 git 改写。
+*.bat       -text
+*.cmd       -text
+*.ps1       -text
+*.ini       -text
+*.tn6       -text
+*.rc        -text
+*.dsp       -text
+*.dsw       -text
+*.sln       -text
+*.vcxproj   -text
+*.filters   -text
+*.h         -text
+*.cpp       -text
+
+# ---------- Unix 侧执行件：强制 LF ----------
+*.sh        text eol=lf
+*.bash      text eol=lf
+
+# ---------- 实测全一形态的源码/配置：强制 LF ----------
+*.go        text eol=lf
+*.rs        text eol=lf
+*.py        text eol=lf
+*.kt        text eol=lf
+*.c         text eol=lf
+*.xml       text eol=lf
+*.html      text eol=lf
+*.toml      text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.json      text eol=lf
+*.mod       text eol=lf
+*.sum       text eol=lf
+*.lock      text eol=lf
+*.gradle    text eol=lf
+*.work      text eol=lf
+*.pro       text eol=lf
+*.example   text eol=lf
+*.dat       text eol=lf
+
+# ---------- 二进制：永不换行、永不 diff ----------
+*.png   -text
+*.jpg   -text
+*.jpeg  -text
+*.gif   -text
+*.ico   -text
+*.icns  -text
+*.cur   -text
+*.ttf   -text
+*.otf   -text
+*.woff  -text
+*.woff2 -text
+*.pdf   -text
+*.mp4   -text
+*.zip   -text
+*.gz    -text
+*.jar   -text
+*.aar   -text
+*.apk   -text
+*.dex   -text
+*.class -text
+*.dll   -text
+*.exe   -text
+*.so    -text
+*.dylib -text
+*.lib   -text
+*.obj   -text
+*.wasm  -text
+
+# ---------- 密钥与业务数据：字节原样（口令/keystore 的格式不容改写） ----------
+*.keystore -text
+*.jks      -text
+*.p12      -text
+*.pfx      -text
+*.pem      -text
+*.key      -text
+*.db       -text
+*.db-wal   -text
+*.db-shm   -text
+*.doc      -text
+*.docx     -text
+*.xls      -text
+*.xlsx     -text

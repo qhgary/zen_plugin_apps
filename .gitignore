@@ -1,0 +1,191 @@
+# macOS (单独上传 applications 到 GitHub 时也需要排除)
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*
+
+# Secrets - never commit
+zen_release.keystore
+.env.android
+.env.android.bat
+# 签名材料一律不进公开面：本目录整体上传公网，这里自带一份兜底规则——
+# 阶段 1 在本目录重新 git init 后单仓根的规则不适用，任何私钥容器被拷进来
+# 都必须被挡住。
+*.pfx
+*.p12
+.env.signing
+# 凭据与机器本地文件（与单仓根 .gitignore 同源）：阶段 1 在 applications 根重新
+# git init，单仓根与 zen_plugin/.gitignore 的规则对它不适用，必须在这里自带一份。
+# 否则 tdx_dll/zen_license.key、local.properties 这类文件会进公开仓。
+*.key
+# 本地放置的授权文件，一律不入库
+zen_license.txt
+zen_license.key.txt
+zen_license
+local.properties
+test_in.json
+# tdx_dll/ 只是构建期的资源目录（dlls.ini / tdx_formula.txt / tdx_zen.tn6），
+# 在发的 tdx_zen.dll 真身在 dist/<target>/<profile>/tdx/ 下且必须入库。本机
+# 跑过构建后 tdx_dll/ 里会残留一份旧 DLL，而单仓根的 `*.dll` 规则对阶段 1 的
+# 独立仓不适用，所以在这里点名排除它——否则一份保护状态未验证的旧引擎二进制
+# 会被 git add -A 收进公开仓并永久可下载。
+tdx_dll/tdx_zen.dll
+
+# HQChart 第三方图表库的测试夹具与回归测试件：成品不带、运行不需要。
+# 构建侧有两处硬证据——build.sh 打包桌面 app 时 `rm -rf` 这四个路径，
+# android/zen_mobile/app/build.gradle 的 excludedJscommonEntries 也把它们
+# 从 APK assets 里排除。单仓根 zen_plugin/.gitignore:99-102 早已排除，但阶段 1
+# 的独立仓不继承那条规则，故此处自带一份；否则约 82.8 MB 测试数据会随公开仓上传。
+HQChart/jscommon/umychart.testdata/
+HQChart/jscommon/umychart.NetworkFilterTest.js
+HQChart/jscommon/umychart.regressiontest.js
+HQChart/jscommon/umychart.testdata.js
+
+# Gradle / Android intermediate outputs (regenerable)
+build/
+.gradle/
+.kotlin/
+.cxx/
+
+# Android Studio / IntelliJ IDE metadata
+.idea/
+# Build artifacts that are final packaged outputs (recursively excluded).
+# Anything else under dist/<target>/release/ is considered a closed-source
+# binary component and SHOULD be tracked.
+#
+# 已知最终成品目录（按平台）：
+#   - zen_desktop/   桌面 app 打包结果（macOS .app、Windows .exe bundle 等）
+#   - zen_replay/    回测工具打包结果（macOS/Linux/Windows 可执行）
+#   - zen_mobile/    android apk 打包结果
+dist/**/release/zen_desktop/
+dist/**/release/zen_replay/
+dist/**/release/zen_mobile/
+
+# AAR 指纹戳是构建机本地状态（源码哈希 + go/javac 版本 + NDK 版本目录名），
+# 上一行注释里"the stamp lives next to the AAR under dist\ (git-ignored)"
+# 说的就是它 —— 规则早先只写在单仓根，公开面这层缺一条，故在此自带一份。
+dist/**/*.fingerprint
+
+# 仅发布 release 档产物。
+dist/**/debug/
+
+# MinGW 交叉编译的 Windows 自检件不进公开仓：AGENTS 写明它只用于"编译代码看有没有
+# 问题"、不部署到通达信，`build.sh all_zip` 也按 cross-compile artifact 跳过。
+# 而它的目录形状就是一个安装包（tdx_zen.dll + dlls.ini + tdx_zen.tn6 + 安装器 bat），
+# 从 mac 发布时两份 MSVC target 根本不在 dist 里，用户照 SETUP.md 找
+# dist/x86_64-pc-windows-msvc/ 只会看到这个只差 5 个字母的目录，并把它当成成品装进
+# 通达信——那是一枚从没在通达信跑过、且只有 64 位（32 位版需要的 i686 这份在 mac 上
+# 压根产不出来）的二进制。全仓无任何脚本/文档消费 gnu 目录，排除它零损失。
+dist/*-pc-windows-gnu/
+
+# 大体积构建产物：HTML 用户手册（从源码生成）
+README.html
+
+# 开发期临时归档。
+# 正式成品 zip 由根 build.sh 的 do_all_zip 落在 zen_plugin/release/，不在本目录。
+*.zip
+
+# 仓库管理脚本（仅本地使用，不应进入开源分发）
+reinit_repo.sh
+
+# Desktop app 运行时产物（已生成的旧文件 + npm 依赖树）
+zen_desktop/app/manual.html
+zen_desktop/app/node_modules/
+# Android 构建期同步的 assets
+# 同步任务 cleanupZenSyncedAssets 会在 package 阶段只清空它登记过的条目。
+# 例外：manual.html 不在同步清单里，是 docs 渲染产物的手工副本，需随手册更新一起 cp 进来。
+android/zen_mobile/app/src/main/assets/
+
+# 构建期暂存副本不入库。
+zen_desktop/app/zen_auth_helper
+zen_desktop/app/zen_auth_helper.exe
+zen_replay/app/zen_auth_helper
+zen_replay/app/zen_auth_helper.exe
+zen_desktop/app/license_agreement.html
+zen_desktop/app/license_agreement.js
+zen_replay/app/license_agreement.html
+zen_replay/app/license_agreement.js
+zen_desktop/app/zen_error_codes.js
+zen_replay/app/zen_error_codes.js
+zen_desktop/app/VERSION
+zen_replay/app/VERSION
+zen_desktop/app/ZenChartDraw.js
+zen_desktop/app/ZenHQChartCompat.js
+# 本地 go build 的残留二进制（成品目录 dist/**/release/zen_desktop/ 已另行排除）
+zen_desktop/app/zen_desktop
+zen_desktop/app/zen_desktop.exe
+zen_replay/app/zen_replay
+zen_replay/app/zen_replay.exe
+zen_replay/zen_replay_debug
+# 同步盘/编辑器与混淆流程留下的备份（replay.html.bak 是混淆前的可读件）
+*.bak
+
+# 宿主侧验证测试不在公开面留件：测试由内部流程临时拷入、跑完立刻删。
+# 这条是兜底 —— 万一跑到一半被 Ctrl-C 或断电，没删干净的半件不会被 push 出去。
+# 规范：`applications/` 下不留内部验证材料。
+zen_desktop/app/*_verify_test.go
+zen_replay/app/*_verify_test.go
+
+# 兜底：常见 npm 临时文件 / 调试日志
+npm-debug.log*
+npm-debug.log
+.yarn-integrity
+*.npm.tmp
+
+# AI IDE / assistant context dirs — never upload.
+# 完整一份（与单仓根 .gitignore 同源）：zen_plugin_apps 仓库在 applications
+# 根重新 git init，单仓根的忽略规则对它不适用，故此处必须自行覆盖全部 52 项。
+# .github 是仓库配置，属应提交内容，刻意排除。
+.trae/
+.trae-cn/
+.trae-aicc/
+.marscode/
+.catpaw/
+.catpawai/
+.sankuai/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.antigravity/
+.antigravity-ide/
+.cline/
+.roo/
+.codebuddy/
+.codebuddycn/
+.crush/
+.opencode/
+.omo/
+.sisyphus/
+.joycode/
+.joycoder/
+.joycode-editor/
+.lingma/
+.qoder/
+.qoder-cn/
+.qoder-cli/
+.qodersec/
+.workbuddy/
+.zcode/
+.qmind/
+.ocat/
+.hermes/
+.agents/
+.agent-browser/
+.ai_completion/
+.securecoder/
+.cc-switch/
+.ollama/
+.windsurf/
+.continue/
+.copilot/
+.qwen/
+.iflow/
+.amazonq/
+.codeium/
+.augment/
+.specstory/
+.goose/
+.droid/
+.plandex/

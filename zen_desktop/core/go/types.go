@@ -1,0 +1,35 @@
+package core
+
+type KLine struct {
+	Date     int     `json:"Date"`
+	YClose   float64 `json:"YClose"`
+	Open     float64 `json:"Open"`
+	Close    float64 `json:"Close"`
+	High     float64 `json:"High"`
+	Low      float64 `json:"Low"`
+	Vol      float64 `json:"Vol"`
+	Time     int     `json:"Time,omitempty"`
+	Price    float64 `json:"Price,omitempty"`
+	Turnover float64 `json:"Turnover,omitempty"`
+	Amount   float64 `json:"Amount,omitempty"`
+	AvPrice  float64 `json:"AvPrice,omitempty"`
+}
+
+type R struct {
+	Symbol      string  `json:"Symbol"`
+	Name        string  `json:"Name,omitempty"`
+	Data        []KLine `json:"Data"`
+	FlowCapital int     `json:"FlowCapital,omitempty"`
+	Error       string  `json:"error,omitempty"`
+}
+
+type APIOptions struct {
+	MachineCode   func() string
+	WatchListPath string
+	DebugMode     bool
+	AuthToken     string
+	// AuthCookieName 非空时，token 校验额外接受该名字的 cookie——
+	// desktop 的 HTML 入口会种 zen_token_<port> cookie，浏览器导航 URL 无需带 token。
+	AuthCookieName string
+	AllowedOrigin string
+}

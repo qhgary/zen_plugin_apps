@@ -1,0 +1,19 @@
+# applications/VERSION -- UI version single source of truth (open-source side).
+#
+# Canonical source for the three open-source UI version numbers (desktop, APK,
+# replay). Closed-source artifacts (DLL / WASM / AAR) do not read it.
+#
+# Consumers:
+#   - zen_desktop / zen_replay main.go -- //go:embed, served at /VERSION;
+#     zen_version.js parses the [ui] section in the browser
+#   - android Gradle -- [ui].apk feeds BuildConfig.VERSION_NAME, which the APK UI
+#     reads through the @JavascriptInterface bridge (WebView blocks sync XHR)
+#   - applications/build.sh -- lists this file in the incremental gate and copies
+#     it beside the Go main.go that embeds it
+#
+# Format: TOML, parsed by hand (no third-party dependency).
+
+[ui]
+desktop = "1.5.0" # zen_desktop UI  -> zen.html :: ZEN_UI_VERSION
+apk = "1.5.0" # APK UI          -> zen_version.js :: ZEN_UI_VERSION + Gradle versionName
+replay  = "1.5.0" # Replay UI       -> replay.html :: ZEN_UI_VERSION
